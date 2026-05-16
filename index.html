@@ -1,36 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Advanced Weather App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="style.css">
+  <title>Advanced Weather App</title>
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="clear">
 
-<div class="app">
+  <div class="container">
 
-    <h2>🌦 Weather Forecast App</h2>
+    <h1 class="app-title">
+      Weather Forecast App
+    </h1>
 
-    <input type="text" id="city" placeholder="Enter City">
+    <!-- SEARCH -->
 
-<button onclick="getWeather()">Search</button>
+    <div class="search-box">
 
-<h1 id="location"></h1>
+      <input
+        type="text"
+        id="city"
+        placeholder="Enter city name"
+      >
 
-<h2 id="temp"></h2>
+      <button onclick="getWeather()">
+        Search
+      </button>
 
-<p id="desc"></p>
+    </div>
 
-<div id="forecast"></div>
+    <!-- MAIN WEATHER -->
 
-<script src="script.js"></script>
+    <div class="weather-card">
+
+      <h2 id="location">Pune</h2>
+
+      <h1 id="temp">--°C</h1>
+
+      <p id="desc">
+        Real Time Weather
+      </p>
+
+      <div class="details">
+
+        <div class="detail-box">
+          <h3>Humidity</h3>
+          <p id="humidity">--%</p>
+        </div>
+
+        <div class="detail-box">
+          <h3>Wind</h3>
+          <p id="wind">-- km/h</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- FORECAST -->
+
+    <h2 class="forecast-heading">
+      7 Day Forecast
+    </h2>
+
+    <div id="forecast"></div>
+
+  </div>
+
+  <script src="script.js"></script>
+
 </body>
 </html>
