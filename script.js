@@ -1,75 +1,150 @@
-const apiKey = "YOUR_API_KEY";
+const apiKey = "deO8t2nbwpcWWvx2rW8xAVUf0A6dbAc6";
 
-const geoAPI = "https://api.openweathermap.org/geo/1.0/direct";
-const oneCallAPI = "https://api.openweathermap.org/data/3.0/onecall";
+/* =========================
+   MAIN WEATHER FUNCTION
+========================= */
+async function getWeather() {
+  const city = document.getElementById("city").value;
 
-let input = document.getElementById("input-box");
+  if (!city) {
+    alert("Please enter a city");
+    return;
+  }
 
-input.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-        getWeather(input.value);
-    }
-});
+  const realtimeURL =
+    `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
 
-async function getWeather(city) {
-    try {
+  const forecastURL =
+    `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
 
-        // STEP 1: GET LAT & LON
-        let geoRes = await fetch(`${geoAPI}?q=${city}&limit=1&appid=${apiKey}`);
-        let geoData = await geoRes.json();
+  try {
+    // 🌡 REAL-TIME WEATHER
+    const res1 = await fetch(realtimeURL);
+    const data1 = await res1.json();
 
-        if (!geoData.length) {
-            swal("Error", "City not found", "error");
-            return;
-        }
+    const values = data1.data.values;
 
-        let lat = geoData[0].lat;
-        let lon = geoData[0].lon;
+    const temp = values.temperature;
+    const feels = values.temperatureApparent;
+    const code = values.weatherCode;
 
-        // STEP 2: GET WEATHER DATA (CURRENT + 7 DAYS)
-        let weatherRes = await fetch(
-            `${oneCallAPI}?lat=${lat}&lon=${lon}&units=metric&exclude=minutely,hourly,alerts&appid=${apiKey}`
-        );
+    document.getElementById("location").innerText = city;
+    document.getElementById("temp").innerText = temp + "°C";
+    document.getElementById("desc").innerText =
+      "Feels like " + feels + "°C";
 
-        let data = await weatherRes.json();
+    setTheme(code);
 
-        displayWeather(data, geoData[0].name);
+    // 🌦 FORECAST WEATHER
+    const res2 = await fetch(forecastURL);
+    const data2 = await res2.json();
 
-    } catch (error) {
-        console.log(error);
-    }
+    showForecast(data2.timelines.daily);
+
+  } catch (error) {
+    console.log(error);
+    alert("Error fetching weather data");
+  }
 }
 
-function displayWeather(data, city) {
+/* =========================
+   FORECAST (5 DAYS)
+========================= */
+function showForecast(days) {
+  const forecastBox = document.getElementById("forecast");
+  forecastBox.innerHTML = "";
 
-    let current = data.current;
+  for (let i = 0; i < 5; i++) {
+    const d = days[i].values;
 
-    let html = `
-        <div class="weather-card">
-            <h2>${city}</h2>
-            <h1>${Math.round(current.temp)}°C</h1>
-            <p>${current.weather[0].main}</p>
-            <p>Feels like: ${Math.round(current.feels_like)}°C</p>
-        </div>
+    const card = document.createElement("div");
+    card.className = "forecast-card";
 
-        <h3>7-Day Forecast</h3>
-
-        <div class="forecast">
+    card.innerHTML = `
+      <h4>Day ${i + 1}</h4>
+      <p>🌡 ${d.temperatureAvg}°C</p>
+      <p>🌧 ${d.precipitationProbability}%</p>
     `;
 
-    data.daily.slice(0, 7).forEach((day, index) => {
-        let date = new Date(day.dt * 1000).toDateString();
-
-        html += `
-            <div class="day">
-                <b>${date.split(" ")[0]}</b>
-                <p>${Math.round(day.temp.day)}°C</p>
-                <small>${day.weather[0].main}</small>
-            </div>
-        `;
-    });
-
-    html += `</div>`;
-
-    document.getElementById("weather-body").innerHTML = html;
+    forecastBox.appendChild(card);
+  }
 }
+
+/* =========================
+   WEATHER THEME SYSTEM
+========================= */
+function setTheme(code) {
+
+  document.body.className = "";
+
+  // ☀️ Clear
+  if (code === 1000) {
+    document.body.classList.add("clear");
+  }
+
+  // ☁️ Clouds
+  else if (code >= 1001 && code <= 1100) {
+    document.body.classList.add("clouds");
+  }
+
+  // 🌧 Rain
+  else if (code >= 4000) {
+    document.body.classList.add("rainy");
+    startRain();
+  }
+
+  // ❄ Snow
+  else if (code >= 5000) {
+    document.body.classList.add("snowy");
+    startSnow();
+  }
+
+  // 🌫 Mist
+  else {
+    document.body.classList.add("mist");
+  }
+}
+
+/* =========================
+   RAIN ANIMATION
+========================= */
+function startRain() {
+  for (let i = 0; i < 50; i++) {
+    let drop = document.createElement("div");
+    drop.className = "rain";
+
+    drop.style.left = Math.random() * window.innerWidth + "px";
+    drop.style.animationDuration = Math.random() * 1 + 0.5 + "s";
+
+    document.body.appendChild(drop);
+
+    setTimeout(() => {
+      drop.remove();
+    }, 2000);
+  }
+}
+
+/* =========================
+   SNOW ANIMATION
+========================= */
+function startSnow() {
+  for (let i = 0; i < 40; i++) {
+    let snow = document.createElement("div");
+    snow.className = "snow";
+
+    snow.style.left = Math.random() * window.innerWidth + "px";
+
+    document.body.appendChild(snow);
+
+    setTimeout(() => {
+      snow.remove();
+    }, 3000);
+  }
+}
+
+/* =========================
+   AUTO LOAD DEFAULT CITY
+========================= */
+window.onload = () => {
+  getWeather("Pune");
+};
