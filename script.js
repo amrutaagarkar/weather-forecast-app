@@ -1,112 +1,94 @@
 const apiKey = "deO8t2nbwpcWWvx2rW8xAVUf0A6dbAc6";
 
 /* =========================
-   MAIN WEATHER FUNCTION
+   GET WEATHER
 ========================= */
+
 async function getWeather(defaultCity = null) {
 
-  // Get city from input OR default city
-  const city =
-    defaultCity || document.getElementById("city").value;
+  const cityInput = document.getElementById("city");
+
+  const city = defaultCity || cityInput.value;
 
   if (!city) {
-    alert("Please enter a city");
+    alert("Enter city name");
     return;
   }
 
-  // Set input value automatically
-  document.getElementById("city").value = city;
-
-  const realtimeURL =
-    `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
-
-  const forecastURL =
-    `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
-
   try {
 
-    /* =========================
-       REALTIME WEATHER
-    ========================= */
+    /* REALTIME API */
 
-    const res1 = await fetch(realtimeURL);
+    const realtimeURL =
+      `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
 
-    if (!res1.ok) {
-      throw new Error("City not found");
-    }
+    const realtimeRes = await fetch(realtimeURL);
 
-    const data1 = await res1.json();
+    const realtimeData = await realtimeRes.json();
 
-    const values = data1.data.values;
+    console.log(realtimeData);
 
-    const temp = Math.round(values.temperature);
-    const feels = Math.round(values.temperatureApparent);
-    const humidity = values.humidity;
-    const wind = values.windSpeed;
-    const code = values.weatherCode;
+    const values = realtimeData.data.values;
 
-    document.getElementById("location").innerText = city;
+    document.getElementById("location").innerText =
+      city;
 
     document.getElementById("temp").innerText =
-      temp + "°C";
+      Math.round(values.temperature) + "°C";
 
     document.getElementById("desc").innerText =
-      "Feels like " + feels + "°C";
+      "Feels Like " +
+      Math.round(values.temperatureApparent) +
+      "°C";
 
-    // Optional extra details
-    if (document.getElementById("humidity")) {
-      document.getElementById("humidity").innerText =
-        humidity + "%";
-    }
+    /* FORECAST API */
 
-    if (document.getElementById("wind")) {
-      document.getElementById("wind").innerText =
-        wind + " km/h";
-    }
+    const forecastURL =
+      `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
 
-    // Set weather theme
-    setTheme(code);
+    const forecastRes = await fetch(forecastURL);
 
-    /* =========================
-       FORECAST
-    ========================= */
+    const forecastData = await forecastRes.json();
 
-    const res2 = await fetch(forecastURL);
+    console.log(forecastData);
 
-    const data2 = await res2.json();
+    const dailyData =
+      forecastData.timelines.daily;
 
-    // Correct forecast path
-    const daily =
-      data2.timelines.daily;
+    showForecast(dailyData);
 
-    showForecast(daily);
+    /* WEATHER THEMES */
 
-  } catch (error) {
+    setTheme(values.weatherCode);
+
+  }
+
+  catch (error) {
 
     console.log(error);
 
-    alert("Error fetching weather data");
+    alert("Weather data not found");
 
   }
 }
 
 /* =========================
-   FORECAST (5 DAYS)
+   FORECAST
 ========================= */
+
 function showForecast(days) {
 
-  const forecastBox =
-    document.getElementById("forecast");
+  const forecast = document.getElementById("forecast");
 
-  forecastBox.innerHTML = "";
+  forecast.innerHTML = "";
 
   for (let i = 1; i <= 5; i++) {
 
-    const day = days[i];
+    const item = days[i];
 
-    const d = day.values;
+    const values = item.values;
 
-    const date = new Date(day.time);
+    const date = new Date(item.time);
 
     const dayName =
       date.toLocaleDateString("en-US", {
@@ -115,21 +97,23 @@ function showForecast(days) {
 
     const card = document.createElement("div");
 
-    card.className = "forecast-card";
+    card.classList.add("forecast-card");
 
     card.innerHTML = `
-      <h4>${dayName}</h4>
-      <p>🌡 ${Math.round(d.temperatureAvg)}°C</p>
-      <p>🌧 ${d.precipitationProbability}%</p>
+      <h3>${dayName}</h3>
+      <p>🌡 ${Math.round(values.temperatureAvg)}°C</p>
+      <p>💧 ${values.humidityAvg}%</p>
     `;
 
-    forecastBox.appendChild(card);
+    forecast.appendChild(card);
+
   }
 }
 
 /* =========================
-   WEATHER THEME SYSTEM
+   WEATHER BACKGROUND
 ========================= */
+
 function setTheme(code) {
 
   document.body.className = "";
@@ -166,7 +150,7 @@ function setTheme(code) {
 
   }
 
-  // Mist/Fog
+  // Mist
   else {
 
     document.body.classList.add("mist");
@@ -175,40 +159,43 @@ function setTheme(code) {
 }
 
 /* =========================
-   RAIN ANIMATION
+   RAIN EFFECT
 ========================= */
+
 function startRain() {
 
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 50; i++) {
 
-    let drop = document.createElement("div");
+    const rain = document.createElement("div");
 
-    drop.className = "rain";
+    rain.classList.add("rain");
 
-    drop.style.left =
+    rain.style.left =
       Math.random() * window.innerWidth + "px";
 
-    drop.style.animationDuration =
+    rain.style.animationDuration =
       Math.random() * 1 + 0.5 + "s";
 
-    document.body.appendChild(drop);
+    document.body.appendChild(rain);
 
     setTimeout(() => {
-      drop.remove();
+      rain.remove();
     }, 2000);
+
   }
 }
 
 /* =========================
-   SNOW ANIMATION
+   SNOW EFFECT
 ========================= */
+
 function startSnow() {
 
   for (let i = 0; i < 40; i++) {
 
-    let snow = document.createElement("div");
+    const snow = document.createElement("div");
 
-    snow.className = "snow";
+    snow.classList.add("snow");
 
     snow.style.left =
       Math.random() * window.innerWidth + "px";
@@ -218,26 +205,31 @@ function startSnow() {
     setTimeout(() => {
       snow.remove();
     }, 3000);
+
   }
 }
 
 /* =========================
-   ENTER KEY SUPPORT
+   ENTER KEY
 ========================= */
+
 document
   .getElementById("city")
   .addEventListener("keypress", function (e) {
 
     if (e.key === "Enter") {
+
       getWeather();
+
     }
 
   });
 
 /* =========================
-   AUTO LOAD DEFAULT CITY
+   AUTO LOAD
 ========================= */
-window.onload = () => {
+
+window.onload = function () {
 
   getWeather("Pune");
 
