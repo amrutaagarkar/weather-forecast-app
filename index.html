@@ -19,11 +19,17 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css
 
     <h2>🌦 Weather Forecast App</h2>
 
-    <input type="text" id="input-box" placeholder="Enter City Name">
+    <input type="text" id="city" placeholder="Enter City">
 
-    <div id="weather-body"></div>
+<button onclick="getWeather()">Search</button>
 
-</div>
+<h1 id="location"></h1>
+
+<h2 id="temp"></h2>
+
+<p id="desc"></p>
+
+<div id="forecast"></div>
 
 <script src="script.js"></script>
 </body>
