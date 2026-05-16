@@ -1,139 +1,182 @@
-const apiKey = "deO8t2nbwpcWWvx2rW8xAVUf0A6dbAc6";
+const apiKey =
+"deO8t2nbwpcWWvx2rW8xAVUf0A6dbAc6";
 
-/* =========================
-   GET WEATHER
-========================= */
+/* GET WEATHER */
 
-async function getWeather(defaultCity = null) {
+async function getWeather(defaultCity=null){
 
-  const cityInput = document.getElementById("city");
+  const cityInput =
+    document.getElementById("city");
 
-  const city = defaultCity || cityInput.value;
+  const city =
+    defaultCity || cityInput.value;
 
-  if (!city) {
-    alert("Enter city name");
+  if(!city){
+    alert("Please enter city");
     return;
   }
 
-  try {
+  try{
 
-    /* REALTIME API */
+    /* REALTIME */
 
     const realtimeURL =
-      `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
+    `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
 
-    const realtimeRes = await fetch(realtimeURL);
+    const realtimeRes =
+      await fetch(realtimeURL);
 
-    const realtimeData = await realtimeRes.json();
+    const realtimeData =
+      await realtimeRes.json();
 
     console.log(realtimeData);
 
-    const values = realtimeData.data.values;
+    const values =
+      realtimeData.data.values;
 
-    document.getElementById("location").innerText =
-      city;
+    const temp =
+      Math.round(values.temperature);
 
-    document.getElementById("temp").innerText =
-      Math.round(values.temperature) + "°C";
+    const feels =
+      Math.round(values.temperatureApparent);
 
-    document.getElementById("desc").innerText =
-      "Feels Like " +
-      Math.round(values.temperatureApparent) +
-      "°C";
+    const humidity =
+      Math.round(values.humidity);
 
-    /* FORECAST API */
+    const wind =
+      Math.round(values.windSpeed);
+
+    const code =
+      values.weatherCode;
+
+    /* UPDATE UI */
+
+    document.getElementById("location")
+    .innerText = city;
+
+    document.getElementById("temp")
+    .innerText = temp + "°C";
+
+    document.getElementById("desc")
+    .innerText =
+      "Feels Like " + feels + "°C";
+
+    document.getElementById("humidity")
+    .innerText = humidity + "%";
+
+    document.getElementById("wind")
+    .innerText = wind + " km/h";
+
+    /* FORECAST */
 
     const forecastURL =
-      `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
+    `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
 
-    const forecastRes = await fetch(forecastURL);
+    const forecastRes =
+      await fetch(forecastURL);
 
-    const forecastData = await forecastRes.json();
+    const forecastData =
+      await forecastRes.json();
 
     console.log(forecastData);
 
-    const dailyData =
+    const daily =
       forecastData.timelines.daily;
 
-    showForecast(dailyData);
+    showForecast(daily);
 
-    /* WEATHER THEMES */
+    /* BACKGROUND */
 
-    setTheme(values.weatherCode);
+    setTheme(code);
 
   }
 
-  catch (error) {
+  catch(error){
 
     console.log(error);
 
-    alert("Weather data not found");
+    alert("Weather not found");
 
   }
+
 }
 
-/* =========================
-   FORECAST
-========================= */
+/* FORECAST */
 
-function showForecast(days) {
+function showForecast(days){
 
-  const forecast = document.getElementById("forecast");
+  const forecast =
+    document.getElementById("forecast");
 
   forecast.innerHTML = "";
 
-  for (let i = 1; i <= 5; i++) {
+  for(let i=1;i<=7;i++){
 
     const item = days[i];
 
     const values = item.values;
 
-    const date = new Date(item.time);
+    const date =
+      new Date(item.time);
 
-    const dayName =
-      date.toLocaleDateString("en-US", {
-        weekday: "short"
-      });
+    const day =
+      date.toLocaleDateString(
+        "en-US",
+        {weekday:"short"}
+      );
 
-    const card = document.createElement("div");
+    const card =
+      document.createElement("div");
 
     card.classList.add("forecast-card");
 
     card.innerHTML = `
-      <h3>${dayName}</h3>
+      <h3>${day}</h3>
+
       <p>🌡 ${Math.round(values.temperatureAvg)}°C</p>
-      <p>💧 ${values.humidityAvg}%</p>
+
+      <p>💧 ${Math.round(values.humidityAvg)}%</p>
+
+      <p>🌧 ${Math.round(values.precipitationProbabilityAvg)}%</p>
     `;
 
     forecast.appendChild(card);
 
   }
+
 }
 
-/* =========================
-   WEATHER BACKGROUND
-========================= */
+/* THEMES */
 
-function setTheme(code) {
+function setTheme(code){
 
   document.body.className = "";
 
-  // Clear
-  if (code === 1000) {
+  /* CLEAR */
+
+  if(code === 1000){
 
     document.body.classList.add("clear");
 
   }
 
-  // Cloudy
-  else if (code >= 1001 && code <= 1102) {
+  /* CLOUDS */
+
+  else if(
+    code >= 1001 &&
+    code <= 1102
+  ){
 
     document.body.classList.add("clouds");
 
   }
 
-  // Rain
-  else if (code >= 4000 && code < 5000) {
+  /* RAIN */
+
+  else if(
+    code >= 4000 &&
+    code < 5000
+  ){
 
     document.body.classList.add("rainy");
 
@@ -141,8 +184,9 @@ function setTheme(code) {
 
   }
 
-  // Snow
-  else if (code >= 5000) {
+  /* SNOW */
+
+  else if(code >= 5000){
 
     document.body.classList.add("snowy");
 
@@ -150,23 +194,24 @@ function setTheme(code) {
 
   }
 
-  // Mist
-  else {
+  /* DEFAULT */
+
+  else{
 
     document.body.classList.add("mist");
 
   }
+
 }
 
-/* =========================
-   RAIN EFFECT
-========================= */
+/* RAIN EFFECT */
 
-function startRain() {
+function startRain(){
 
-  for (let i = 0; i < 50; i++) {
+  for(let i=0;i<50;i++){
 
-    const rain = document.createElement("div");
+    const rain =
+      document.createElement("div");
 
     rain.classList.add("rain");
 
@@ -178,22 +223,22 @@ function startRain() {
 
     document.body.appendChild(rain);
 
-    setTimeout(() => {
+    setTimeout(()=>{
       rain.remove();
-    }, 2000);
+    },2000);
 
   }
+
 }
 
-/* =========================
-   SNOW EFFECT
-========================= */
+/* SNOW EFFECT */
 
-function startSnow() {
+function startSnow(){
 
-  for (let i = 0; i < 40; i++) {
+  for(let i=0;i<40;i++){
 
-    const snow = document.createElement("div");
+    const snow =
+      document.createElement("div");
 
     snow.classList.add("snow");
 
@@ -202,34 +247,31 @@ function startSnow() {
 
     document.body.appendChild(snow);
 
-    setTimeout(() => {
+    setTimeout(()=>{
       snow.remove();
-    }, 3000);
+    },3000);
 
   }
+
 }
 
-/* =========================
-   ENTER KEY
-========================= */
+/* ENTER KEY */
 
 document
-  .getElementById("city")
-  .addEventListener("keypress", function (e) {
+.getElementById("city")
+.addEventListener("keypress",function(e){
 
-    if (e.key === "Enter") {
+  if(e.key === "Enter"){
 
-      getWeather();
+    getWeather();
 
-    }
+  }
 
-  });
+});
 
-/* =========================
-   AUTO LOAD
-========================= */
+/* AUTO LOAD */
 
-window.onload = function () {
+window.onload = function(){
 
   getWeather("Pune");
 
