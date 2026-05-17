@@ -6,7 +6,6 @@ document.getElementById("city");
 
 const weather =
 document.getElementById("weather");
-
 let weatherChart;
 let map;
 
