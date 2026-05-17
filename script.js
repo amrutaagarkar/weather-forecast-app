@@ -1,278 +1,128 @@
-const apiKey =
-"deO8t2nbwpcWWvx2rW8xAVUf0A6dbAc6";
+const apiKey = "9b14b2cbfdfa41f6b63172731261605";
 
-/* GET WEATHER */
+/* ---------- NOTIFICATION PERMISSION ---------- */
+Notification.requestPermission();
 
-async function getWeather(defaultCity=null){
+/* ---------- MAP ---------- */
+let map = L.map("map").setView([20,78], 5);
 
-  const cityInput =
-    document.getElementById("city");
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-  const city =
-    defaultCity || cityInput.value;
+let marker;
 
-  if(!city){
-    alert("Please enter city");
-    return;
-  }
+/* ---------- SEARCH ---------- */
+document.getElementById("search").onclick = () => {
+getWeather(city.value);
+};
 
-  try{
+document.getElementById("geo").onclick = () => {
+navigator.geolocation.getCurrentPosition(pos=>{
+getWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
+});
+};
 
-    /* REALTIME */
+document.getElementById("dark").onclick = () => {
+document.body.classList.toggle("dark");
+};
 
-    const realtimeURL =
-    `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
+/* ---------- FETCH WEATHER ---------- */
+async function getWeather(city){
 
-    const realtimeRes =
-      await fetch(realtimeURL);
+const res = await fetch(
+`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`
+);
 
-    const realtimeData =
-      await realtimeRes.json();
-
-    console.log(realtimeData);
-
-    const values =
-      realtimeData.data.values;
-
-    const temp =
-      Math.round(values.temperature);
-
-    const feels =
-      Math.round(values.temperatureApparent);
-
-    const humidity =
-      Math.round(values.humidity);
-
-    const wind =
-      Math.round(values.windSpeed);
-
-    const code =
-      values.weatherCode;
-
-    /* UPDATE UI */
-
-    document.getElementById("location")
-    .innerText = city;
-
-    document.getElementById("temp")
-    .innerText = temp + "°C";
-
-    document.getElementById("desc")
-    .innerText =
-      "Feels Like " + feels + "°C";
-
-    document.getElementById("humidity")
-    .innerText = humidity + "%";
-
-    document.getElementById("wind")
-    .innerText = wind + " km/h";
-
-    /* FORECAST */
-
-    const forecastURL =
-    `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
-
-    const forecastRes =
-      await fetch(forecastURL);
-
-    const forecastData =
-      await forecastRes.json();
-
-    console.log(forecastData);
-
-    const daily =
-      forecastData.timelines.daily;
-
-    showForecast(daily);
-
-    /* BACKGROUND */
-
-    setTheme(code);
-
-  }
-
-  catch(error){
-
-    console.log(error);
-
-    alert("Weather not found");
-
-  }
-
+const data = await res.json();
+show(data);
 }
 
-/* FORECAST */
+/* ---------- SHOW WEATHER ---------- */
+function show(data){
 
-function showForecast(days){
+const c = data.current;
+const l = data.location;
+const f = data.forecast.forecastday;
 
-  const forecast =
-    document.getElementById("forecast");
+document.getElementById("map").style.display="block";
 
-  forecast.innerHTML = "";
+document.getElementById("weather").innerHTML = `
+<h2>${l.name}, ${l.country}</h2>
+<h1>${c.temp_c}°C</h1>
+<p>${c.condition.text}</p>
 
-  for(let i=1;i<=7;i++){
+<div class="card">Humidity: ${c.humidity}%</div>
+<div class="card">Wind: ${c.wind_kph} km/h</div>
+<div class="card">Pressure: ${c.pressure_mb}</div>
+`;
 
-    const item = days[i];
+/* MAP */
+map.setView([l.lat, l.lon], 10);
 
-    const values = item.values;
+if(marker) map.removeLayer(marker);
 
-    const date =
-      new Date(item.time);
+marker = L.marker([l.lat, l.lon])
+.addTo(map)
+.bindPopup(l.name)
+.openPopup();
 
-    const day =
-      date.toLocaleDateString(
-        "en-US",
-        {weekday:"short"}
-      );
+/* ALERT SYSTEM */
+checkAlerts(c);
 
-    const card =
-      document.createElement("div");
-
-    card.classList.add("forecast-card");
-
-    card.innerHTML = `
-      <h3>${day}</h3>
-
-      <p>🌡 ${Math.round(values.temperatureAvg)}°C</p>
-
-      <p>💧 ${Math.round(values.humidityAvg)}%</p>
-
-      <p>🌧 ${Math.round(values.precipitationProbabilityAvg)}%</p>
-    `;
-
-    forecast.appendChild(card);
-
-  }
-
+/* CHART */
+chart(f);
 }
 
-/* THEMES */
+/* ---------- WEATHER ALERTS (PUSH) ---------- */
+function checkAlerts(c){
 
-function setTheme(code){
+const text = c.condition.text.toLowerCase();
 
-  document.body.className = "";
-
-  /* CLEAR */
-
-  if(code === 1000){
-
-    document.body.classList.add("clear");
-
-  }
-
-  /* CLOUDS */
-
-  else if(
-    code >= 1001 &&
-    code <= 1102
-  ){
-
-    document.body.classList.add("clouds");
-
-  }
-
-  /* RAIN */
-
-  else if(
-    code >= 4000 &&
-    code < 5000
-  ){
-
-    document.body.classList.add("rainy");
-
-    startRain();
-
-  }
-
-  /* SNOW */
-
-  else if(code >= 5000){
-
-    document.body.classList.add("snowy");
-
-    startSnow();
-
-  }
-
-  /* DEFAULT */
-
-  else{
-
-    document.body.classList.add("mist");
-
-  }
-
+if(text.includes("rain")){
+sendNotification("🌧️ Rain Alert","Rain expected in your area");
 }
 
-/* RAIN EFFECT */
-
-function startRain(){
-
-  for(let i=0;i<50;i++){
-
-    const rain =
-      document.createElement("div");
-
-    rain.classList.add("rain");
-
-    rain.style.left =
-      Math.random() * window.innerWidth + "px";
-
-    rain.style.animationDuration =
-      Math.random() * 1 + 0.5 + "s";
-
-    document.body.appendChild(rain);
-
-    setTimeout(()=>{
-      rain.remove();
-    },2000);
-
-  }
-
+if(text.includes("storm") || text.includes("thunder")){
+sendNotification("⛈️ Storm Alert","Thunderstorm incoming");
 }
 
-/* SNOW EFFECT */
-
-function startSnow(){
-
-  for(let i=0;i<40;i++){
-
-    const snow =
-      document.createElement("div");
-
-    snow.classList.add("snow");
-
-    snow.style.left =
-      Math.random() * window.innerWidth + "px";
-
-    document.body.appendChild(snow);
-
-    setTimeout(()=>{
-      snow.remove();
-    },3000);
-
-  }
-
+if(c.temp_c > 38){
+sendNotification("🔥 Heat Alert","Very high temperature today");
+}
 }
 
-/* ENTER KEY */
+/* ---------- PUSH NOTIFICATION ---------- */
+function sendNotification(title, body){
 
-document
-.getElementById("city")
-.addEventListener("keypress",function(e){
+if(Notification.permission !== "granted"){
+Notification.requestPermission();
+return;
+}
 
-  if(e.key === "Enter"){
+if("serviceWorker" in navigator){
+navigator.serviceWorker.ready.then(reg=>{
+reg.showNotification(title,{
+body:body,
+vibrate:[200,100,200]
+});
+});
+}
+}
 
-    getWeather();
+/* ---------- CHART ---------- */
+function chart(f){
 
-  }
-
+new Chart(document.getElementById("chart"),{
+type:"line",
+data:{
+labels:f.map(x=>x.date),
+datasets:[{
+label:"Temp",
+data:f.map(x=>x.day.avgtemp_c),
+borderWidth:3,
+tension:0.4
+}]
+},
+options:{plugins:{legend:{display:false}}}
 });
 
-/* AUTO LOAD */
-
-window.onload = function(){
-
-  getWeather("Pune");
-
-};
+}
