@@ -1,16 +1,30 @@
 const apiKey = "9b14b2cbfdfa41f6b63172731261605";
 
-/* ---------- NOTIFICATION PERMISSION ---------- */
+/* ---------------- CACHE KEY ---------------- */
+const CACHE_KEY = "weather_cache";
+
+/* ---------------- NOTIFICATIONS ---------------- */
 Notification.requestPermission();
 
-/* ---------- MAP ---------- */
+/* ---------------- MAP ---------------- */
 let map = L.map("map").setView([20,78], 5);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 let marker;
 
-/* ---------- SEARCH ---------- */
+/* ---------------- OFFLINE SAVE ---------------- */
+function saveOffline(data){
+localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+}
+
+/* ---------------- LOAD OFFLINE ---------------- */
+function loadOffline(){
+let data = localStorage.getItem(CACHE_KEY);
+return data ? JSON.parse(data) : null;
+}
+
+/* ---------------- SEARCH ---------------- */
 document.getElementById("search").onclick = () => {
 getWeather(city.value);
 };
@@ -25,18 +39,39 @@ document.getElementById("dark").onclick = () => {
 document.body.classList.toggle("dark");
 };
 
-/* ---------- FETCH WEATHER ---------- */
+/* ---------------- FETCH WEATHER ---------------- */
 async function getWeather(city){
+
+try{
 
 const res = await fetch(
 `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`
 );
 
 const data = await res.json();
+
+/* SAVE FOR OFFLINE */
+saveOffline(data);
+
 show(data);
+
+}catch(e){
+
+console.log("OFFLINE MODE ACTIVE");
+
+/* LOAD CACHE */
+const offlineData = loadOffline();
+
+if(offlineData){
+showOffline(offlineData);
+}else{
+alert("No internet & no saved data available");
 }
 
-/* ---------- SHOW WEATHER ---------- */
+}
+}
+
+/* ---------------- ONLINE VIEW ---------------- */
 function show(data){
 
 const c = data.current;
@@ -65,32 +100,55 @@ marker = L.marker([l.lat, l.lon])
 .bindPopup(l.name)
 .openPopup();
 
-/* ALERT SYSTEM */
+/* ALERTS */
 checkAlerts(c);
 
 /* CHART */
 chart(f);
 }
 
-/* ---------- WEATHER ALERTS (PUSH) ---------- */
+/* ---------------- OFFLINE VIEW ---------------- */
+function showOffline(data){
+
+const c = data.current;
+const l = data.location;
+
+document.getElementById("map").style.display="block";
+
+document.getElementById("weather").innerHTML = `
+<h2>📴 OFFLINE MODE</h2>
+<h2>${l.name}, ${l.country}</h2>
+<h1>${c.temp_c}°C</h1>
+<p>${c.condition.text} (cached)</p>
+
+<div class="card">Humidity: ${c.humidity}%</div>
+<div class="card">Wind: ${c.wind_kph} km/h</div>
+<div class="card">Last Updated: ${l.localtime}</div>
+`;
+
+/* keep last map location */
+map.setView([l.lat, l.lon], 10);
+}
+
+/* ---------------- ALERT SYSTEM ---------------- */
 function checkAlerts(c){
 
 const text = c.condition.text.toLowerCase();
 
 if(text.includes("rain")){
-sendNotification("🌧️ Rain Alert","Rain expected in your area");
+sendNotification("🌧️ Rain Alert","Rain expected");
 }
 
-if(text.includes("storm") || text.includes("thunder")){
-sendNotification("⛈️ Storm Alert","Thunderstorm incoming");
+if(text.includes("storm")){
+sendNotification("⛈️ Storm Alert","Storm incoming");
 }
 
 if(c.temp_c > 38){
-sendNotification("🔥 Heat Alert","Very high temperature today");
+sendNotification("🔥 Heat Alert","High temperature today");
 }
 }
 
-/* ---------- PUSH NOTIFICATION ---------- */
+/* ---------------- NOTIFICATIONS ---------------- */
 function sendNotification(title, body){
 
 if(Notification.permission !== "granted"){
@@ -98,7 +156,6 @@ Notification.requestPermission();
 return;
 }
 
-if("serviceWorker" in navigator){
 navigator.serviceWorker.ready.then(reg=>{
 reg.showNotification(title,{
 body:body,
@@ -106,9 +163,8 @@ vibrate:[200,100,200]
 });
 });
 }
-}
 
-/* ---------- CHART ---------- */
+/* ---------------- CHART ---------------- */
 function chart(f){
 
 new Chart(document.getElementById("chart"),{
@@ -121,8 +177,7 @@ data:f.map(x=>x.day.avgtemp_c),
 borderWidth:3,
 tension:0.4
 }]
-},
-options:{plugins:{legend:{display:false}}}
+}
 });
 
 }
