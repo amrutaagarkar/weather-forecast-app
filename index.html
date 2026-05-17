@@ -1,79 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Weather App</title>
 
-  <title>Advanced Weather App</title>
+<link rel="stylesheet" href="style.css">
 
-  <link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
-<body class="clear">
+<body>
 
-  <div class="container">
+<div class="container">
+<div class="app">
 
-    <h1 class="app-title">
-      Weather Forecast App
-    </h1>
+<h2>🌦️ Smart Weather App</h2>
 
-    <!-- SEARCH -->
+<div class="search">
+<input id="city" placeholder="Enter city">
+<button id="search">Search</button>
+<button id="geo">My Location</button>
+<button id="dark">Dark Mode</button>
+</div>
 
-    <div class="search-box">
+<div id="weather"></div>
 
-      <input
-        type="text"
-        id="city"
-        placeholder="Enter city name"
-      >
+<div id="map"></div>
 
-      <button onclick="getWeather()">
-        Search
-      </button>
+</div>
+</div>
 
-    </div>
+<script src="script.js"></script>
 
-    <!-- MAIN WEATHER -->
-
-    <div class="weather-card">
-
-      <h2 id="location">Pune</h2>
-
-      <h1 id="temp">--°C</h1>
-
-      <p id="desc">
-        Real Time Weather
-      </p>
-
-      <div class="details">
-
-        <div class="detail-box">
-          <h3>Humidity</h3>
-          <p id="humidity">--%</p>
-        </div>
-
-        <div class="detail-box">
-          <h3>Wind</h3>
-          <p id="wind">-- km/h</p>
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- FORECAST -->
-
-    <h2 class="forecast-heading">
-      7 Day Forecast
-    </h2>
-
-    <div id="forecast"></div>
-
-  </div>
-
-  <script src="script.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("sw.js");
+}
+</script>
 
 </body>
 </html>
