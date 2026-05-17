@@ -1,183 +1,523 @@
-const apiKey = "9b14b2cbfdfa41f6b63172731261605";
+const apiKey =
+"9b14b2cbfdfa41f6b63172731261605";
 
-/* ---------------- CACHE KEY ---------------- */
-const CACHE_KEY = "weather_cache";
+const cityInput =
+document.getElementById("city");
 
-/* ---------------- NOTIFICATIONS ---------------- */
-Notification.requestPermission();
+const weather =
+document.getElementById("weather");
 
-/* ---------------- MAP ---------------- */
-let map = L.map("map").setView([20,78], 5);
+let weatherChart;
+let map;
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+/* Search */
 
-let marker;
+document.getElementById(
+"search-btn"
+).addEventListener("click",()=>{
 
-/* ---------------- OFFLINE SAVE ---------------- */
-function saveOffline(data){
-localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+if(cityInput.value.trim() !== ""){
+
+getWeather(cityInput.value);
+
 }
 
-/* ---------------- LOAD OFFLINE ---------------- */
-function loadOffline(){
-let data = localStorage.getItem(CACHE_KEY);
-return data ? JSON.parse(data) : null;
-}
-
-/* ---------------- SEARCH ---------------- */
-document.getElementById("search").onclick = () => {
-getWeather(city.value);
-};
-
-document.getElementById("geo").onclick = () => {
-navigator.geolocation.getCurrentPosition(pos=>{
-getWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
 });
-};
 
-document.getElementById("dark").onclick = () => {
-document.body.classList.toggle("dark");
-};
+/* Enter Key */
 
-/* ---------------- FETCH WEATHER ---------------- */
-async function getWeather(city){
+cityInput.addEventListener(
+"keypress",
+(e)=>{
 
-try{
+if(e.key === "Enter"){
 
-const res = await fetch(
-`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`
+getWeather(cityInput.value);
+
+}
+
+}
 );
 
-const data = await res.json();
+/* Dark Mode */
 
-/* SAVE FOR OFFLINE */
-saveOffline(data);
+document.getElementById(
+"dark-btn"
+).addEventListener("click",()=>{
 
-show(data);
+document.body.classList.toggle("dark");
 
-}catch(e){
+});
 
-console.log("OFFLINE MODE ACTIVE");
+/* My Location */
 
-/* LOAD CACHE */
-const offlineData = loadOffline();
+document.getElementById(
+"location-btn"
+).addEventListener("click",()=>{
 
-if(offlineData){
-showOffline(offlineData);
-}else{
-alert("No internet & no saved data available");
+navigator.geolocation.getCurrentPosition(
+
+(position)=>{
+
+const lat =
+position.coords.latitude;
+
+const lon =
+position.coords.longitude;
+
+getWeather(`${lat},${lon}`);
+
 }
 
+);
+
+});
+
+/* Get Weather */
+
+function getWeather(city){
+
+weather.style.display = "block";
+
+weather.innerHTML =
+"<h2>Loading Weather...</h2>";
+
+fetch(
+`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`
+)
+
+.then(response=>response.json())
+
+.then(data=>{
+
+if(data.error){
+
+alert(data.error.message);
+
+return;
+
 }
+
+showWeather(data);
+
+})
+
+.catch(()=>{
+
+alert("Failed to fetch weather");
+
+});
+
 }
 
-/* ---------------- ONLINE VIEW ---------------- */
-function show(data){
+/* Show Weather */
 
-const c = data.current;
-const l = data.location;
-const f = data.forecast.forecastday;
+function showWeather(data){
 
-document.getElementById("map").style.display="block";
+const current =
+data.current;
 
-document.getElementById("weather").innerHTML = `
-<h2>${l.name}, ${l.country}</h2>
-<h1>${c.temp_c}°C</h1>
-<p>${c.condition.text}</p>
+const location =
+data.location;
 
-<div class="card">Humidity: ${c.humidity}%</div>
-<div class="card">Wind: ${c.wind_kph} km/h</div>
-<div class="card">Pressure: ${c.pressure_mb}</div>
+const forecast =
+data.forecast.forecastday;
+
+/* Dynamic Background */
+
+changeBackground(
+current.condition.text
+);
+
+weather.innerHTML = `
+
+<div class="top">
+
+<div>
+
+<h2>
+${location.name},
+${location.country}
+</h2>
+
+<p>
+${location.localtime}
+</p>
+
+<div class="temp">
+${current.temp_c}°C
+</div>
+
+<div class="condition">
+${current.condition.text}
+</div>
+
+</div>
+
+<div class="main-icon">
+
+<img src="https:${current.condition.icon}">
+
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h3>Humidity</h3>
+<p>${current.humidity}%</p>
+</div>
+
+<div class="card">
+<h3>Wind</h3>
+<p>${current.wind_kph} KM/H</p>
+</div>
+
+<div class="card">
+<h3>Pressure</h3>
+<p>${current.pressure_mb} mb</p>
+</div>
+
+<div class="card">
+<h3>UV Index</h3>
+<p>${current.uv}</p>
+</div>
+
+<div class="card">
+<h3>Air Quality</h3>
+<p>
+${current.air_quality
+? Math.round(current.air_quality.pm2_5)
+: "N/A"}
+</p>
+</div>
+
+<div class="card">
+<h3>Sunrise</h3>
+<p>${forecast[0].astro.sunrise}</p>
+</div>
+
+<div class="card">
+<h3>Sunset</h3>
+<p>${forecast[0].astro.sunset}</p>
+</div>
+
+</div>
+
+<h2 style="margin-top:35px;">
+24 Hour Forecast
+</h2>
+
+<div
+class="hourly-container"
+id="hourly-container">
+</div>
+
+<h2 style="margin-top:35px;">
+7 Day Forecast
+</h2>
+
+<div class="forecast-container">
+
+${forecast.map(day=>`
+
+<div class="forecast-card">
+
+<h3>
+
+${new Date(day.date)
+.toLocaleDateString(
+'en-US',
+{weekday:'short'}
+)}
+
+</h3>
+
+<img
+src="https:${day.day.condition.icon}">
+
+<p>
+${day.day.avgtemp_c}°C
+</p>
+
+<p>
+${day.day.condition.text}
+</p>
+
+</div>
+
+`).join("")}
+
+</div>
+
+<canvas id="tempChart"></canvas>
+
+<h2 style="margin-top:35px;">
+Live Weather Map
+</h2>
+
+<div id="map"></div>
 `;
 
-/* MAP */
-map.setView([l.lat, l.lon], 10);
+showHourly(
+forecast[0].hour
+);
 
-if(marker) map.removeLayer(marker);
+createChart(
+forecast
+);
 
-marker = L.marker([l.lat, l.lon])
+loadMap(
+location.lat,
+location.lon
+);
+
+}
+
+/* Hourly Forecast */
+
+function showHourly(hourData){
+
+const container =
+document.getElementById(
+"hourly-container"
+);
+
+container.innerHTML = "";
+
+hourData.slice(0,24)
+.forEach(hour=>{
+
+let time =
+hour.time.split(" ")[1];
+
+container.innerHTML += `
+
+<div class="hour-card">
+
+<h3>
+${time}
+</h3>
+
+<img
+src="https:${hour.condition.icon}">
+
+<p>
+${hour.temp_c}°C
+</p>
+
+<p>
+Rain:
+${hour.chance_of_rain}%
+</p>
+
+</div>
+`;
+
+});
+
+}
+
+/* Chart */
+
+function createChart(forecast){
+
+const labels =
+forecast.map(day=>
+
+new Date(day.date)
+.toLocaleDateString(
+'en-US',
+{weekday:'short'}
+)
+
+);
+
+const temps =
+forecast.map(day=>
+day.day.avgtemp_c
+);
+
+if(weatherChart){
+
+weatherChart.destroy();
+
+}
+
+weatherChart =
+new Chart(
+
+document.getElementById(
+"tempChart"
+),
+
+{
+
+type:'line',
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:'Temperature °C',
+
+data:temps,
+
+borderWidth:4,
+
+tension:0.5,
+
+fill:true
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+plugins:{
+
+legend:{
+
+labels:{
+
+color:'black',
+
+font:{
+size:16
+}
+
+}
+
+}
+
+},
+
+scales:{
+
+x:{
+ticks:{
+color:'black'
+}
+},
+
+y:{
+ticks:{
+color:'black'
+}
+}
+
+}
+
+}
+
+}
+
+);
+
+}
+
+/* Map */
+
+function loadMap(lat,lon){
+
+if(map){
+
+map.remove();
+
+}
+
+map =
+L.map('map')
+.setView([lat, lon], 8);
+
+L.tileLayer(
+
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+
+{
+attribution:'© OpenStreetMap'
+}
+
+).addTo(map);
+
+L.marker([lat, lon])
+
 .addTo(map)
-.bindPopup(l.name)
+
+.bindPopup("Weather Location")
+
 .openPopup();
 
-/* ALERTS */
-checkAlerts(c);
-
-/* CHART */
-chart(f);
 }
 
-/* ---------------- OFFLINE VIEW ---------------- */
-function showOffline(data){
+/* Dynamic Background */
 
-const c = data.current;
-const l = data.location;
+function changeBackground(condition){
 
-document.getElementById("map").style.display="block";
+condition =
+condition.toLowerCase();
 
-document.getElementById("weather").innerHTML = `
-<h2>📴 OFFLINE MODE</h2>
-<h2>${l.name}, ${l.country}</h2>
-<h1>${c.temp_c}°C</h1>
-<p>${c.condition.text} (cached)</p>
+if(condition.includes("rain")){
 
-<div class="card">Humidity: ${c.humidity}%</div>
-<div class="card">Wind: ${c.wind_kph} km/h</div>
-<div class="card">Last Updated: ${l.localtime}</div>
-`;
-
-/* keep last map location */
-map.setView([l.lat, l.lon], 10);
-}
-
-/* ---------------- ALERT SYSTEM ---------------- */
-function checkAlerts(c){
-
-const text = c.condition.text.toLowerCase();
-
-if(text.includes("rain")){
-sendNotification("🌧️ Rain Alert","Rain expected");
-}
-
-if(text.includes("storm")){
-sendNotification("⛈️ Storm Alert","Storm incoming");
-}
-
-if(c.temp_c > 38){
-sendNotification("🔥 Heat Alert","High temperature today");
-}
-}
-
-/* ---------------- NOTIFICATIONS ---------------- */
-function sendNotification(title, body){
-
-if(Notification.permission !== "granted"){
-Notification.requestPermission();
-return;
-}
-
-navigator.serviceWorker.ready.then(reg=>{
-reg.showNotification(title,{
-body:body,
-vibrate:[200,100,200]
-});
-});
-}
-
-/* ---------------- CHART ---------------- */
-function chart(f){
-
-new Chart(document.getElementById("chart"),{
-type:"line",
-data:{
-labels:f.map(x=>x.date),
-datasets:[{
-label:"Temp",
-data:f.map(x=>x.day.avgtemp_c),
-borderWidth:3,
-tension:0.4
-}]
-}
-});
+document.body.style.background =
+"linear-gradient(to right,#4b79a1,#283e51)";
 
 }
+
+else if(condition.includes("cloud")){
+
+document.body.style.background =
+"linear-gradient(to right,#757f9a,#d7dde8)";
+
+}
+
+else if(condition.includes("clear")){
+
+document.body.style.background =
+"linear-gradient(to right,#56ccf2,#2f80ed)";
+
+}
+
+else if(condition.includes("snow")){
+
+document.body.style.background =
+"linear-gradient(to right,#e6dada,#274046)";
+
+}
+
+else{
+
+document.body.style.background =
+"linear-gradient(to right,#1d4350,#a43931)";
+
+}
+
+}
+
+/* Auto Load Weather */
+
+window.onload = ()=>{
+
+navigator.geolocation.getCurrentPosition(
+
+(position)=>{
+
+const lat =
+position.coords.latitude;
+
+const lon =
+position.coords.longitude;
+
+getWeather(`${lat},${lon}`);
+
+}
+
+);
+
+};
