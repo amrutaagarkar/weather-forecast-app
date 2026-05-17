@@ -1,11 +1,12 @@
 const apiKey =
-"5bd0df400c6c4c0d8c7135101261705";
+"903dbc34862b4c14b0d170728261705";
 
 const cityInput =
 document.getElementById("city");
 
 const weather =
 document.getElementById("weather");
+
 let weatherChart;
 let map;
 
