@@ -90,9 +90,17 @@ fetch(
 
 .then(data=>{
 
+console.log(data);
+
 if(data.error){
 
-alert(data.error.message);
+weather.innerHTML = `
+
+<h2 style="color:red;">
+${data.error.message}
+</h2>
+
+`;
 
 return;
 
@@ -102,9 +110,17 @@ showWeather(data);
 
 })
 
-.catch(()=>{
+.catch(error=>{
 
-alert("Failed to fetch weather");
+console.log(error);
+
+weather.innerHTML = `
+
+<h2 style="color:red;">
+Failed to fetch weather
+</h2>
+
+`;
 
 });
 
@@ -182,15 +198,6 @@ ${current.condition.text}
 <div class="card">
 <h3>UV Index</h3>
 <p>${current.uv}</p>
-</div>
-
-<div class="card">
-<h3>Air Quality</h3>
-<p>
-${current.air_quality
-? Math.round(current.air_quality.pm2_5)
-: "N/A"}
-</p>
 </div>
 
 <div class="card">
@@ -378,41 +385,7 @@ fill:true
 
 options:{
 
-responsive:true,
-
-plugins:{
-
-legend:{
-
-labels:{
-
-color:'black',
-
-font:{
-size:16
-}
-
-}
-
-}
-
-},
-
-scales:{
-
-x:{
-ticks:{
-color:'black'
-}
-},
-
-y:{
-ticks:{
-color:'black'
-}
-}
-
-}
+responsive:true
 
 }
 
@@ -484,13 +457,6 @@ document.body.style.background =
 
 }
 
-else if(condition.includes("snow")){
-
-document.body.style.background =
-"linear-gradient(to right,#e6dada,#274046)";
-
-}
-
 else{
 
 document.body.style.background =
@@ -500,7 +466,7 @@ document.body.style.background =
 
 }
 
-/* Auto Load Weather */
+/* Auto Load */
 
 window.onload = ()=>{
 
