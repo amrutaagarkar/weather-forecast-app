@@ -1,53 +1,376 @@
-body{
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+*{
 margin:0;
-font-family:Poppins;
-background:linear-gradient(to right,#1d4350,#a43931);
-color:white;
-padding:15px;
+padding:0;
+box-sizing:border-box;
 }
 
-.dark{background:black;}
+body{
 
-.container{max-width:1000px;margin:auto;}
+font-family:'Poppins',sans-serif;
+
+min-height:100vh;
+
+padding:20px;
+
+color:white;
+
+background:
+linear-gradient(to right,#1d4350,#a43931);
+
+overflow-x:hidden;
+
+transition:0.5s;
+}
+
+/* Animated Background */
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+top:0;
+left:0;
+
+width:100%;
+height:100%;
+
+background:url('https://i.gifer.com/7scP.gif');
+
+background-size:cover;
+
+opacity:0.12;
+
+z-index:-1;
+
+pointer-events:none;
+}
+
+/* Dark Mode */
+
+.dark{
+
+background:black;
+}
+
+/* Container */
+
+.container{
+
+max-width:1300px;
+
+margin:auto;
+}
+
+/* App */
 
 .app{
+
 background:rgba(255,255,255,0.12);
-padding:20px;
+
+backdrop-filter:blur(18px);
+
+border-radius:30px;
+
+padding:25px;
+
+box-shadow:
+0 8px 32px rgba(0,0,0,0.3);
+}
+
+/* Title */
+
+.title{
+
+text-align:center;
+
+font-size:42px;
+
+font-weight:700;
+
+margin-bottom:25px;
+}
+
+/* Search */
+
+.search-box{
+
+display:flex;
+
+gap:10px;
+
+flex-wrap:wrap;
+
+margin-bottom:25px;
+}
+
+.search-box input{
+
+flex:1;
+
+padding:16px;
+
+border:none;
+
+border-radius:14px;
+
+font-size:18px;
+
+outline:none;
+}
+
+.search-box button{
+
+padding:16px 20px;
+
+border:none;
+
+border-radius:14px;
+
+cursor:pointer;
+
+font-size:16px;
+
+font-weight:600;
+
+transition:0.3s;
+}
+
+.search-box button:hover{
+
+transform:scale(1.05);
+}
+
+#search-btn{
+background:#00b894;
+color:white;
+}
+
+#location-btn{
+background:#0984e3;
+color:white;
+}
+
+#dark-btn{
+background:#2d3436;
+color:white;
+}
+
+/* Weather Section */
+
+.weather{
+display:none;
+}
+
+/* Top */
+
+.top{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:20px;
+}
+
+/* Temp */
+
+.temp{
+
+font-size:90px;
+
+font-weight:700;
+
+margin-top:10px;
+}
+
+/* Condition */
+
+.condition{
+
+font-size:26px;
+
+margin-top:10px;
+}
+
+/* Icon */
+
+.main-icon img{
+
+width:130px;
+}
+
+/* Cards */
+
+.grid{
+
+display:grid;
+
+grid-template-columns:
+repeat(auto-fit,minmax(220px,1fr));
+
+gap:20px;
+
+margin-top:30px;
+}
+
+.card{
+
+background:rgba(255,255,255,0.18);
+
+padding:22px;
+
+border-radius:24px;
+
+text-align:center;
+
+backdrop-filter:blur(12px);
+
+box-shadow:
+0 8px 20px rgba(0,0,0,0.2);
+
+transition:0.4s;
+}
+
+.card:hover{
+
+transform:
+translateY(-8px)
+scale(1.03);
+}
+
+.card h3{
+
+margin-bottom:15px;
+}
+
+/* Forecast */
+
+.forecast-container,
+.hourly-container{
+
+display:flex;
+
+gap:15px;
+
+overflow-x:auto;
+
+padding-bottom:10px;
+
+margin-top:20px;
+}
+
+.forecast-card,
+.hour-card{
+
+min-width:150px;
+
+background:rgba(255,255,255,0.15);
+
+padding:15px;
+
+border-radius:18px;
+
+text-align:center;
+
+backdrop-filter:blur(10px);
+
+box-shadow:
+0 4px 20px rgba(255,255,255,0.15);
+
+transition:0.3s;
+}
+
+.forecast-card:hover,
+.hour-card:hover{
+
+transform:scale(1.05);
+}
+
+.forecast-card img,
+.hour-card img{
+
+width:60px;
+}
+
+/* Scrollbar */
+
+.forecast-container::-webkit-scrollbar,
+.hourly-container::-webkit-scrollbar{
+
+height:8px;
+}
+
+.forecast-container::-webkit-scrollbar-thumb,
+.hourly-container::-webkit-scrollbar-thumb{
+
+background:white;
+
 border-radius:20px;
 }
 
-.search{display:flex;gap:10px;flex-wrap:wrap;}
+/* Chart */
 
-input{
-flex:1;
-padding:12px;
-border:none;
-border-radius:10px;
+canvas{
+
+margin-top:30px;
+
+background:white;
+
+border-radius:20px;
+
+padding:15px;
 }
 
-button{
-padding:12px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-}
-
-#search{background:#00b894;color:white;}
-#geo{background:#0984e3;color:white;}
-#dark{background:#2d3436;color:white;}
+/* Map */
 
 #map{
-display:none;
-height:300px;
-margin-top:20px;
-border-radius:12px;
+
+height:400px;
+
+width:100%;
+
+margin-top:25px;
+
+border-radius:20px;
+
+overflow:hidden;
 }
 
-#weather{margin-top:20px;}
+/* Responsive */
 
-.card{
-background:rgba(255,255,255,0.15);
-padding:10px;
-border-radius:10px;
-margin-top:10px;
+@media(max-width:768px){
+
+.title{
+font-size:30px;
+}
+
+.temp{
+font-size:60px;
+}
+
+.search-box{
+flex-direction:column;
+}
+
+.search-box button{
+width:100%;
+}
+
+.top{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.main-icon img{
+width:90px;
+}
+
 }
