@@ -1,0 +1,8 @@
+{
+"name":"Smart Weather App",
+"short_name":"Weather",
+"start_url":".",
+"display":"standalone",
+"background_color":"#1d4350",
+"theme_color":"#1d4350"
+}
