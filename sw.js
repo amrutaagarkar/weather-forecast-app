@@ -3,14 +3,32 @@ self.skipWaiting();
 });
 
 self.addEventListener("activate", e=>{
-console.log("SW active");
+console.log("Offline Weather Ready");
 });
 
-self.addEventListener("push", e=>{
-const data = e.data ? e.data.json() : {};
+/* CACHE STATIC FILES */
+const CACHE_NAME = "weather-app-cache";
 
-self.registration.showNotification(data.title || "Weather Alert",{
-body: data.body || "Weather update",
-vibrate:[200,100,200]
+const FILES = [
+"/",
+"/index.html",
+"/style.css",
+"/script.js"
+];
+
+self.addEventListener("install", e=>{
+e.waitUntil(
+caches.open(CACHE_NAME).then(cache=>{
+return cache.addAll(FILES);
+})
+);
 });
+
+/* FETCH OFFLINE FALLBACK */
+self.addEventListener("fetch", e=>{
+e.respondWith(
+fetch(e.request).catch(()=>{
+return caches.match(e.request);
+})
+);
 });
