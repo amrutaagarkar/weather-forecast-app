@@ -1,610 +1,527 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* =========================
+   IMPROVED WEATHER APP JS
+   Add these modifications
+========================= */
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
+/* ---------- 1. Dynamic Weather Theme ---------- */
+
+function setWeatherTheme(condition){
+
+condition = condition.toLowerCase();
+
+if(
+condition.includes("sunny") ||
+condition.includes("clear")
+){
+
+document.body.style.background =
+"linear-gradient(135deg,#f6d365,#fda085)";
+
 }
 
-body{
+else if(condition.includes("rain")){
 
-min-height:100vh;
+document.body.style.background =
+"linear-gradient(135deg,#4b6cb7,#182848)";
 
-padding:20px;
+}
 
-overflow-x:hidden;
+else if(condition.includes("cloud")){
 
-font-family:'Poppins',sans-serif;
+document.body.style.background =
+"linear-gradient(135deg,#bdc3c7,#2c3e50)";
 
-color:white;
+}
 
-/* MICROSOFT WEATHER STYLE BACKGROUND */
+else if(condition.includes("snow")){
 
-background:
-linear-gradient(
-180deg,
-#0f172a 0%,
-#1e293b 40%,
-#334155 100%
+document.body.style.background =
+"linear-gradient(135deg,#e6dada,#274046)";
+
+}
+
+else if(condition.includes("storm")){
+
+document.body.style.background =
+"linear-gradient(135deg,#232526,#414345)";
+
+}
+
+else{
+
+document.body.style.background =
+"linear-gradient(135deg,#4facfe,#00f2fe)";
+
+}
+
+}
+
+/* CALL inside showWeather() */
+
+setWeatherTheme(current.condition.text);
+
+
+/* ---------- 2. Save Last City ---------- */
+
+localStorage.setItem(
+"lastCity",
+location.name
 );
 
-position:relative;
+/* Add inside window.onload */
+
+const savedCity =
+localStorage.getItem("lastCity");
+
+if(savedCity){
+
+getWeather(savedCity);
+
 }
 
-/* SMOOTH MOVING OVERLAY */
 
-body::before{
+/* ---------- 3. Better Alert Safety ---------- */
 
-content:"";
+if(
+data.alerts &&
+data.alerts.alert &&
+data.alerts.alert.length > 0
+){
 
-position:fixed;
+alertBox.classList.remove("hidden");
 
-top:0;
-left:0;
+alertBox.innerHTML =
+`⚠ ${data.alerts.alert[0].headline}`;
 
-width:100%;
-height:100%;
+}
+else{
 
-background:
+alertBox.classList.add("hidden");
 
-radial-gradient(
-circle at 20% 20%,
-rgba(255,255,255,0.08),
-transparent 25%
-),
+}
 
-radial-gradient(
-circle at 80% 30%,
-rgba(0,180,255,0.12),
-transparent 30%
-),
 
-radial-gradient(
-circle at 50% 80%,
-rgba(0,100,255,0.10),
-transparent 30%
+/* ---------- 4. AQI Status ---------- */
+
+function getAQIStatus(pm){
+
+if(pm <= 12){
+return "Good";
+}
+
+if(pm <= 35){
+return "Moderate";
+}
+
+if(pm <= 55){
+return "Unhealthy";
+}
+
+return "Hazardous";
+
+}
+
+/* Replace Air Quality card */
+
+<div class="card">
+<h3>Air Quality</h3>
+<p>
+${Math.round(current.air_quality.pm2_5)}
+- 
+${getAQIStatus(
+current.air_quality.pm2_5
+)}
+</p>
+</div>
+
+
+/* ---------- 5. Limit Hourly Forecast ---------- */
+
+hourData
+.slice(0,12)
+.forEach(hour=>{
+
+
+/* ---------- 6. Search Button Disable ---------- */
+
+const searchBtn =
+document.getElementById(
+"search-btn"
 );
 
-animation:
-weatherFlow 20s ease-in-out infinite;
+function showLoader(){
 
-z-index:-1;
+loader.classList.remove("hidden");
 
-pointer-events:none;
-}
-
-/* VERY SMOOTH ANIMATION */
-
-@keyframes weatherFlow{
-
-0%{
-transform:translateY(0px);
-}
-
-50%{
-transform:translateY(-15px);
-}
-
-100%{
-transform:translateY(0px);
-}
+searchBtn.disabled = true;
 
 }
 
-/* GLOW EFFECT */
+function hideLoader(){
 
-body::before{
+loader.classList.add("hidden");
 
-content:"";
-
-position:fixed;
-
-top:0;
-left:0;
-
-width:100%;
-height:100%;
-
-background:
-
-radial-gradient(circle at top left,
-rgba(0,255,255,0.18),
-transparent 35%),
-
-radial-gradient(circle at bottom right,
-rgba(0,100,255,0.18),
-transparent 35%);
-
-z-index:-1;
-}
-
-/* CONTAINER */
-
-.container{
-
-max-width:1400px;
-
-margin:auto;
-}
-
-/* APP */
-
-.app{
-
-background:
-rgba(255,255,255,0.08);
-
-backdrop-filter:blur(25px);
-
-border:
-1px solid rgba(255,255,255,0.12);
-
-border-radius:30px;
-
-padding:30px;
-
-box-shadow:
-0 8px 40px rgba(0,0,0,0.4);
-}
-
-/* TITLE */
-
-.title{
-
-text-align:center;
-
-font-size:45px;
-
-font-weight:700;
-
-margin-bottom:30px;
-
-background:
-linear-gradient(to right,#fff,#38bdf8);
-
--webkit-background-clip:text;
-
--webkit-text-fill-color:transparent;
-}
-
-/* SEARCH */
-
-.search-box{
-
-display:flex;
-
-gap:15px;
-
-flex-wrap:wrap;
-
-margin-bottom:30px;
-}
-
-.search-box input{
-
-flex:1;
-
-padding:18px;
-
-border:none;
-
-outline:none;
-
-border-radius:18px;
-
-background:
-rgba(255,255,255,0.1);
-
-color:white;
-
-font-size:18px;
-}
-
-.search-box input::placeholder{
-
-color:rgba(255,255,255,0.7);
-}
-
-.search-box button{
-
-padding:16px 24px;
-
-border:none;
-
-border-radius:18px;
-
-font-size:16px;
-
-font-weight:600;
-
-cursor:pointer;
-
-transition:0.3s;
-
-color:white;
-}
-
-.search-box button:hover{
-
-transform:translateY(-4px);
-}
-
-#search-btn{
-
-background:
-linear-gradient(to right,#06b6d4,#3b82f6);
-}
-
-#location-btn{
-
-background:
-linear-gradient(to right,#0ea5e9,#2563eb);
-}
-
-#dark-btn{
-
-background:
-linear-gradient(to right,#111827,#374151);
-}
-
-/* WEATHER */
-
-.weather{
-display:none;
-}
-
-/* TOP SECTION */
-
-.top{
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:center;
-
-flex-wrap:wrap;
-
-gap:20px;
-}
-
-/* TEMP */
-
-.temp{
-
-font-size:110px;
-
-font-weight:700;
-
-line-height:1;
-
-margin-top:10px;
-}
-
-/* CONDITION */
-
-.condition{
-
-font-size:28px;
-
-margin-top:10px;
-
-opacity:0.9;
-}
-
-/* ICON */
-
-.main-icon img{
-
-width:160px;
-
-animation:float 3s ease-in-out infinite;
-}
-
-@keyframes float{
-
-0%{
-transform:translateY(0);
-}
-
-50%{
-transform:translateY(-12px);
-}
-
-100%{
-transform:translateY(0);
-}
+searchBtn.disabled = false;
 
 }
 
-/* GRID */
 
-.grid{
+/* ---------- 7. Better Error UI ---------- */
 
-display:grid;
+.catch(error=>{
 
-grid-template-columns:
-repeat(auto-fit,minmax(220px,1fr));
+hideLoader();
 
-gap:20px;
+weather.style.display = "block";
 
-margin-top:35px;
-}
+weather.innerHTML = `
 
-/* CARD */
+<div class="error-box">
 
-.card,
-.forecast-card,
-.hour-card{
+<h2>
+⚠ Network Error
+</h2>
 
-background:
-rgba(255,255,255,0.08);
+<p>
+Please check your internet connection
+</p>
 
-border:
-1px solid rgba(255,255,255,0.12);
+<button onclick="searchWeather()">
+Retry
+</button>
 
-padding:22px;
+</div>
 
-border-radius:24px;
+`;
 
-text-align:center;
+});
 
-backdrop-filter:blur(12px);
 
-transition:0.4s;
+/* ---------- 8. Weather Notification ---------- */
 
-position:relative;
+function checkWeatherWarnings(current){
 
-overflow:hidden;
-}
+if(current.temp_c >= 40){
 
-.card:hover,
-.forecast-card:hover,
-.hour-card:hover{
-
-transform:
-translateY(-8px)
-scale(1.03);
-
-box-shadow:
-0 10px 25px rgba(0,0,0,0.3);
-}
-
-/* SHINE EFFECT */
-
-.card::before,
-.forecast-card::before,
-.hour-card::before{
-
-content:"";
-
-position:absolute;
-
-top:-50%;
-left:-50%;
-
-width:200%;
-height:200%;
-
-background:
-linear-gradient(
-45deg,
-transparent,
-rgba(255,255,255,0.08),
-transparent
+showCustomAlert(
+"🔥 Extreme Heat Warning"
 );
 
-transform:rotate(25deg);
-
-transition:0.8s;
 }
 
-.card:hover::before,
-.forecast-card:hover::before,
-.hour-card:hover::before{
+if(current.uv >= 8){
 
-left:100%;
+showCustomAlert(
+"☀ Very High UV Index"
+);
+
 }
 
-/* SECTION TITLE */
+if(current.wind_kph >= 50){
 
-.section-title{
+showCustomAlert(
+"🌪 Strong Wind Alert"
+);
 
-font-size:30px;
-
-margin-top:40px;
-
-margin-bottom:20px;
-}
-
-/* HOURLY + FORECAST */
-
-.hourly-container,
-.forecast-container{
-
-display:flex;
-
-gap:18px;
-
-overflow-x:auto;
-
-padding-bottom:10px;
-
-margin-top:20px;
-}
-
-.hour-card,
-.forecast-card{
-
-min-width:160px;
-}
-
-.hour-card img,
-.forecast-card img{
-
-width:70px;
-}
-
-/* CHART */
-
-canvas{
-
-margin-top:30px;
-
-background:
-rgba(255,255,255,0.08);
-
-padding:20px;
-
-border-radius:24px;
-}
-
-/* MAP */
-
-#map{
-
-height:450px;
-
-width:100%;
-
-margin-top:25px;
-
-border-radius:24px;
-
-overflow:hidden;
-}
-
-/* ALERT */
-
-.alert-box{
-
-background:
-linear-gradient(to right,#ef4444,#dc2626);
-
-padding:18px;
-
-border-radius:18px;
-
-margin-bottom:20px;
-
-font-weight:600;
-
-animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-
-0%{
-transform:scale(1);
-}
-
-50%{
-transform:scale(1.02);
-}
-
-100%{
-transform:scale(1);
 }
 
 }
 
-/* LOADER */
+function showCustomAlert(message){
 
-.loader{
+const alert =
+document.createElement("div");
 
-display:flex;
+alert.className =
+"custom-alert";
 
-flex-direction:column;
+alert.innerHTML = message;
 
-align-items:center;
+document.body.appendChild(alert);
 
-justify-content:center;
+setTimeout(()=>{
 
-margin:30px 0;
-}
+alert.remove();
 
-.hidden{
-display:none;
-}
-
-.spinner{
-
-width:60px;
-height:60px;
-
-border:6px solid
-rgba(255,255,255,0.2);
-
-border-top:6px solid #38bdf8;
-
-border-radius:50%;
-
-animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-
-100%{
-transform:rotate(360deg);
-}
+},4000);
 
 }
 
-/* SCROLLBAR */
+/* CALL inside showWeather() */
 
-::-webkit-scrollbar{
-height:8px;
-width:8px;
-}
+checkWeatherWarnings(current);
 
-::-webkit-scrollbar-thumb{
 
-background:#38bdf8;
+/* ---------- 9. Dynamic Greeting ---------- */
 
-border-radius:20px;
-}
+function getGreeting(){
 
-::-webkit-scrollbar-track{
+const hour =
+new Date().getHours();
 
-background:rgba(255,255,255,0.05);
-}
+if(hour < 12){
 
-/* RESPONSIVE */
-
-@media(max-width:768px){
-
-.title{
-font-size:30px;
-}
-
-.temp{
-font-size:65px;
-}
-
-.search-box{
-flex-direction:column;
-}
-
-.search-box button{
-width:100%;
-}
-
-.top{
-flex-direction:column;
-align-items:flex-start;
-}
-
-.main-icon img{
-width:100px;
-}
-
-.grid{
-grid-template-columns:1fr;
-}
-
-#map{
-height:300px;
-}
+return "Good Morning ☀";
 
 }
+
+if(hour < 18){
+
+return "Good Afternoon 🌤";
+
+}
+
+return "Good Evening 🌙";
+
+}
+
+/* Add inside weather HTML */
+
+<h2>
+${getGreeting()}
+</h2>
+
+
+/* ---------- 10. Real Time Clock ---------- */
+
+setInterval(()=>{
+
+const clock =
+document.getElementById("live-clock");
+
+if(clock){
+
+clock.innerHTML =
+new Date().toLocaleTimeString();
+
+}
+
+},1000);
+
+/* Add inside weather HTML */
+
+<div id="live-clock"></div>
+
+
+/* ---------- 11. Wind Direction ---------- */
+
+<div class="card">
+<h3>Wind Direction</h3>
+<p>${current.wind_dir}</p>
+</div>
+
+
+/* ---------- 12. Better Map Zoom ---------- */
+
+map =
+L.map('map')
+.setView([lat, lon], 10);
+
+
+/* ---------- 13. Forecast Click Details ---------- */
+
+document
+.querySelectorAll(".forecast-card")
+.forEach((card,index)=>{
+
+card.addEventListener("click",()=>{
+
+const day = forecast[index];
+
+alert(`
+
+Date: ${day.date}
+
+Condition:
+${day.day.condition.text}
+
+Humidity:
+${day.day.avghumidity}%
+
+Rain Chance:
+${day.day.daily_chance_of_rain}%
+
+Max Temp:
+${day.day.maxtemp_c}°C
+
+Min Temp:
+${day.day.mintemp_c}°C
+
+`);
+
+});
+
+});
+
+
+/* ---------- 14. Smooth Auto Scroll ---------- */
+
+document.getElementById(
+"weather"
+).scrollIntoView({
+
+behavior:"smooth"
+
+});
+
+
+/* ---------- 15. Voice Search ---------- */
+
+const recognition =
+new webkitSpeechRecognition();
+
+recognition.lang = "en-US";
+
+function startVoiceSearch(){
+
+recognition.start();
+
+}
+
+recognition.onresult = (event)=>{
+
+const transcript =
+event.results[0][0].transcript;
+
+cityInput.value = transcript;
+
+searchWeather();
+
+};
+
+/* Add button listener */
+
+document.getElementById(
+"voice-btn"
+).addEventListener(
+"click",
+startVoiceSearch
+);
+
+
+/* ---------- 16. Search History ---------- */
+
+function saveSearch(city){
+
+let history =
+JSON.parse(
+localStorage.getItem("history")
+) || [];
+
+if(!history.includes(city)){
+
+history.unshift(city);
+
+}
+
+history = history.slice(0,5);
+
+localStorage.setItem(
+"history",
+JSON.stringify(history)
+);
+
+}
+
+/* CALL inside searchWeather() */
+
+saveSearch(city);
+
+
+/* ---------- 17. Auto Refresh Weather ---------- */
+
+setInterval(()=>{
+
+const currentCity =
+localStorage.getItem("lastCity");
+
+if(currentCity){
+
+getWeather(currentCity);
+
+}
+
+},300000);
+
+
+/* ---------- 18. Better Geolocation Error ---------- */
+
+()=>{
+
+weather.innerHTML = `
+
+<h2 style="color:red;">
+📍 Location Access Denied
+</h2>
+
+`;
+
+}
+
+
+/* ---------- 19. Temperature Color ---------- */
+
+function getTempColor(temp){
+
+if(temp <= 10){
+
+return "#00b4db";
+
+}
+
+if(temp <= 25){
+
+return "#00c853";
+
+}
+
+if(temp <= 35){
+
+return "#ff9800";
+
+}
+
+return "#ff1744";
+
+}
+
+
+/* ---------- 20. Dynamic Chart Colors ---------- */
+
+const lineColor =
+getTempColor(
+Math.max(...temps)
+);
+
+weatherChart =
+new Chart(ctx,{
+
+type:'line',
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:'Temperature °C',
+
+data:temps,
+
+borderColor:lineColor,
+
+backgroundColor:gradient,
+
+borderWidth:4,
+
+fill:true,
+
+tension:0.5,
+
+pointRadius:6
+
+}]
+
+}
+
+});
