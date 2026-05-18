@@ -146,21 +146,31 @@ weather.innerHTML = `
    GET WEATHER
 ========================= */
 
-function getWeather(city){
+async function getWeather(city){
+
+try{
 
 showLoader();
 
 weather.style.display = "none";
 
-fetch(
+const response = await fetch(
 `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes&alerts=yes`
-)
+);
 
-.then(response=>response.json())
+/* Check API response */
 
-.then(data=>{
+if(!response.ok){
+
+throw new Error("Failed to fetch");
+
+}
+
+const data = await response.json();
 
 hideLoader();
+
+/* API Error */
 
 if(data.error){
 
@@ -168,9 +178,13 @@ weather.style.display = "block";
 
 weather.innerHTML = `
 
-<h2 style="color:red;">
-${data.error.message}
+<div class="error-box">
+
+<h2>
+⚠ ${data.error.message}
 </h2>
+
+</div>
 
 `;
 
@@ -178,11 +192,32 @@ return;
 
 }
 
+/* Save last searched city */
+
+localStorage.setItem(
+"lastCity",
+city
+);
+
+/* Show Weather */
+
 showWeather(data);
 
-})
+/* Weather Theme */
 
-.catch(error=>{
+setWeatherTheme(
+data.current.condition.text
+);
+
+/* Weather Alerts */
+
+checkWeatherWarnings(
+data.current
+);
+
+}
+
+catch(error){
 
 hideLoader();
 
@@ -210,7 +245,7 @@ Retry
 
 `;
 
-});
+}
 
 }
 
