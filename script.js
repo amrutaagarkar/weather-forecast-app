@@ -59,6 +59,8 @@ cityInput.value.trim();
 
 if(city !== ""){
 
+saveSearch(city);
+
 getWeather(city);
 
 }
@@ -66,7 +68,7 @@ getWeather(city);
 }
 
 /* =========================
-   DARK MODE FIX
+   DARK MODE
 ========================= */
 
 darkBtn.addEventListener(
@@ -104,6 +106,19 @@ darkBtn.innerHTML =
 
 }
 
+/* Reapply Theme */
+
+const condition =
+document.querySelector(".condition");
+
+if(condition){
+
+setWeatherTheme(
+condition.innerText
+);
+
+}
+
 }
 );
 
@@ -129,6 +144,19 @@ darkBtn.innerHTML =
 
 }
 );
+
+/* =========================
+   AUTO DARK MODE
+========================= */
+
+const hour =
+new Date().getHours();
+
+if(hour >= 18 || hour <= 6){
+
+document.body.classList.add("dark");
+
+}
 
 /* =========================
    LOCATION
@@ -176,31 +204,51 @@ weather.innerHTML = `
    GET WEATHER
 ========================= */
 
-function getWeather(city){
+async function getWeather(city){
+
+try{
 
 showLoader();
 
-weather.style.display = "none";
+weather.style.display =
+"none";
 
-fetch(
+const response =
+await fetch(
+
 `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes&alerts=yes`
-)
 
-.then(response=>response.json())
+);
 
-.then(data=>{
+if(!response.ok){
+
+throw new Error(
+"Failed to fetch"
+);
+
+}
+
+const data =
+await response.json();
 
 hideLoader();
 
+/* API Error */
+
 if(data.error){
 
-weather.style.display = "block";
+weather.style.display =
+"block";
 
 weather.innerHTML = `
 
-<h2 style="color:red;">
-${data.error.message}
+<div class="error-box">
+
+<h2>
+⚠ ${data.error.message}
 </h2>
+
+</div>
 
 `;
 
@@ -208,27 +256,61 @@ return;
 
 }
 
+/* Save Last City */
+
+localStorage.setItem(
+"lastCity",
+city
+);
+
+/* Show Weather */
+
 showWeather(data);
 
-})
+/* Theme */
 
-.catch(error=>{
+setWeatherTheme(
+data.current.condition.text
+);
+
+/* Warnings */
+
+checkWeatherWarnings(
+data.current
+);
+
+}
+
+catch(error){
 
 hideLoader();
 
 console.log(error);
 
-weather.style.display = "block";
+weather.style.display =
+"block";
 
 weather.innerHTML = `
 
-<h2 style="color:red;">
-⚠ Failed to fetch weather
+<div class="error-box">
+
+<h2>
+⚠ Network Error
 </h2>
+
+<p>
+Please check your internet connection
+</p>
+
+<button onclick="searchWeather()">
+Retry
+</button>
+
+</div>
 
 `;
 
-});
+}
 
 }
 
@@ -262,46 +344,105 @@ searchBtn.disabled = false;
 
 function setWeatherTheme(condition){
 
-const app =
-document.querySelector(".app");
+/* Keep Dark Mode */
+
+if(
+document.body.classList.contains(
+"dark"
+)
+){
+
+document.body.style.background =
+"linear-gradient(135deg,#000000,#121212,#1f1f1f)";
+
+return;
+
+}
 
 condition =
 condition.toLowerCase();
+
+/* Sunny */
 
 if(
 condition.includes("sunny") ||
 condition.includes("clear")
 ){
 
-app.style.background =
+document.body.style.background =
 "linear-gradient(135deg,#f6d365,#fda085)";
 
 }
+
+/* Rain */
 
 else if(
 condition.includes("rain")
 ){
 
-app.style.background =
+document.body.style.background =
 "linear-gradient(135deg,#4b6cb7,#182848)";
 
 }
+
+/* Clouds */
 
 else if(
 condition.includes("cloud")
 ){
 
-app.style.background =
+document.body.style.background =
 "linear-gradient(135deg,#bdc3c7,#2c3e50)";
 
 }
 
-else{
+/* Snow */
 
-app.style.background =
-"rgba(255,255,255,0.08)";
+else if(
+condition.includes("snow")
+){
+
+document.body.style.background =
+"linear-gradient(135deg,#e6dada,#274046)";
 
 }
+
+/* Default */
+
+else{
+
+document.body.style.background =
+"linear-gradient(135deg,#4facfe,#00f2fe)";
+
+}
+
+}
+
+/* =========================
+   AQI STATUS
+========================= */
+
+function getAQIStatus(pm){
+
+if(pm <= 12){
+
+return "Good";
+
+}
+
+if(pm <= 35){
+
+return "Moderate";
+
+}
+
+if(pm <= 55){
+
+return "Unhealthy";
+
+}
+
+return "Hazardous";
 
 }
 
@@ -331,6 +472,61 @@ return "Good Evening 🌙";
 }
 
 /* =========================
+   WEATHER WARNINGS
+========================= */
+
+function checkWeatherWarnings(current){
+
+if(current.temp_c >= 40){
+
+showCustomAlert(
+"🔥 Extreme Heat Warning"
+);
+
+}
+
+if(current.uv >= 8){
+
+showCustomAlert(
+"☀ Very High UV Index"
+);
+
+}
+
+if(current.wind_kph >= 50){
+
+showCustomAlert(
+"🌪 Strong Wind Alert"
+);
+
+}
+
+}
+
+function showCustomAlert(message){
+
+const alert =
+document.createElement("div");
+
+alert.className =
+"custom-alert";
+
+alert.innerHTML =
+message;
+
+document.body.appendChild(
+alert
+);
+
+setTimeout(()=>{
+
+alert.remove();
+
+},4000);
+
+}
+
+/* =========================
    SHOW WEATHER
 ========================= */
 
@@ -352,6 +548,13 @@ data.forecast.forecastday;
 
 setWeatherTheme(
 current.condition.text
+);
+
+/* Save Last City */
+
+localStorage.setItem(
+"lastCity",
+location.name
 );
 
 /* Alerts */
@@ -378,9 +581,7 @@ alertBox.classList.add(
 
 }
 
-/* =========================
-   WEATHER HTML
-========================= */
+/* HTML */
 
 weather.innerHTML = `
 
@@ -440,6 +641,11 @@ src="https:${current.condition.icon}">
 </div>
 
 <div class="card">
+<h3>Wind Direction</h3>
+<p>${current.wind_dir}</p>
+</div>
+
+<div class="card">
 <h3>Pressure</h3>
 <p>${current.pressure_mb} mb</p>
 </div>
@@ -464,6 +670,23 @@ src="https:${current.condition.icon}">
 <p>${forecast[0].astro.sunset}</p>
 </div>
 
+<div class="card">
+<h3>Air Quality</h3>
+<p>
+
+${Math.round(
+current.air_quality.pm2_5
+)}
+
+-
+
+${getAQIStatus(
+current.air_quality.pm2_5
+)}
+
+</p>
+</div>
+
 </div>
 
 <h2 class="section-title">
@@ -481,9 +704,12 @@ id="hourly-container">
 
 <div class="forecast-container">
 
-${forecast.map(day=>`
+${forecast.map((day,index)=>`
 
-<div class="forecast-card">
+<div
+class="forecast-card"
+data-index="${index}"
+>
 
 <h3>
 
@@ -526,6 +752,8 @@ ${day.day.condition.text}
 
 `;
 
+/* Functions */
+
 showHourly(
 forecast[0].hour
 );
@@ -538,6 +766,53 @@ loadMap(
 location.lat,
 location.lon
 );
+
+/* Forecast Details */
+
+document
+.querySelectorAll(".forecast-card")
+.forEach((card,index)=>{
+
+card.addEventListener(
+"click",
+()=>{
+
+const day =
+forecast[index];
+
+alert(`
+
+Date: ${day.date}
+
+Condition:
+${day.day.condition.text}
+
+Humidity:
+${day.day.avghumidity}%
+
+Rain Chance:
+${day.day.daily_chance_of_rain}%
+
+Max Temp:
+${day.day.maxtemp_c}°C
+
+Min Temp:
+${day.day.mintemp_c}°C
+
+`);
+
+}
+);
+
+});
+
+/* Smooth Scroll */
+
+weather.scrollIntoView({
+
+behavior:"smooth"
+
+});
 
 }
 
@@ -589,6 +864,34 @@ ${hour.temp_c}°C
 }
 
 /* =========================
+   TEMP COLOR
+========================= */
+
+function getTempColor(temp){
+
+if(temp <= 10){
+
+return "#00b4db";
+
+}
+
+if(temp <= 25){
+
+return "#00c853";
+
+}
+
+if(temp <= 35){
+
+return "#ff9800";
+
+}
+
+return "#ff1744";
+
+}
+
+/* =========================
    CHART
 ========================= */
 
@@ -621,12 +924,32 @@ document.getElementById(
 "tempChart"
 ).getContext("2d");
 
+const gradient =
+ctx.createLinearGradient(
+0,0,0,400
+);
+
+gradient.addColorStop(
+0,
+"rgba(0,150,255,0.7)"
+);
+
+gradient.addColorStop(
+1,
+"rgba(0,150,255,0)"
+);
+
+const lineColor =
+getTempColor(
+Math.max(...temps)
+);
+
 const textColor =
 document.body.classList.contains(
 "dark"
 )
 ? "white"
-: "#222";
+: "black";
 
 weatherChart =
 new Chart(ctx,{
@@ -643,18 +966,17 @@ label:'Temperature °C',
 
 data:temps,
 
+borderColor:lineColor,
+
 borderWidth:4,
 
 tension:0.5,
 
 fill:true,
 
-pointRadius:6,
+backgroundColor:gradient,
 
-borderColor:"#00c6ff",
-
-backgroundColor:
-"rgba(0,198,255,0.2)"
+pointRadius:6
 
 }]
 
@@ -741,6 +1063,35 @@ L.marker([lat, lon])
 }
 
 /* =========================
+   SEARCH HISTORY
+========================= */
+
+function saveSearch(city){
+
+let history =
+JSON.parse(
+localStorage.getItem(
+"history"
+)
+) || [];
+
+if(!history.includes(city)){
+
+history.unshift(city);
+
+}
+
+history =
+history.slice(0,5);
+
+localStorage.setItem(
+"history",
+JSON.stringify(history)
+);
+
+}
+
+/* =========================
    LIVE CLOCK
 ========================= */
 
@@ -762,10 +1113,41 @@ new Date()
 },1000);
 
 /* =========================
+   AUTO REFRESH
+========================= */
+
+setInterval(()=>{
+
+const currentCity =
+localStorage.getItem(
+"lastCity"
+);
+
+if(currentCity){
+
+getWeather(currentCity);
+
+}
+
+},300000);
+
+/* =========================
    AUTO LOAD
 ========================= */
 
 window.onload = ()=>{
+
+const savedCity =
+localStorage.getItem(
+"lastCity"
+);
+
+if(savedCity){
+
+getWeather(savedCity);
+
+}
+else{
 
 navigator.geolocation
 .getCurrentPosition(
@@ -783,5 +1165,7 @@ getWeather(`${lat},${lon}`);
 }
 
 );
+
+}
 
 };
