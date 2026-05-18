@@ -225,43 +225,40 @@ searchBtn.disabled = false;
 
 function setWeatherTheme(condition){
 
-condition = condition.toLowerCase();
+const app =
+document.querySelector(".app");
+
+condition =
+condition.toLowerCase();
 
 if(
 condition.includes("sunny") ||
 condition.includes("clear")
 ){
 
-document.body.style.background =
+app.style.background =
 "linear-gradient(135deg,#f6d365,#fda085)";
 
 }
 
 else if(condition.includes("rain")){
 
-document.body.style.background =
+app.style.background =
 "linear-gradient(135deg,#4b6cb7,#182848)";
 
 }
 
 else if(condition.includes("cloud")){
 
-document.body.style.background =
+app.style.background =
 "linear-gradient(135deg,#bdc3c7,#2c3e50)";
-
-}
-
-else if(condition.includes("snow")){
-
-document.body.style.background =
-"linear-gradient(135deg,#e6dada,#274046)";
 
 }
 
 else{
 
-document.body.style.background =
-"linear-gradient(135deg,#4facfe,#00f2fe)";
+app.style.background =
+"rgba(255,255,255,0.08)";
 
 }
 
