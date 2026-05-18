@@ -1,11 +1,19 @@
 const apiKey =
 "903dbc34862b4c14b0d170728261705";
 
+/* Elements */
+
 const cityInput =
 document.getElementById("city");
 
 const weather =
 document.getElementById("weather");
+
+const loader =
+document.getElementById("loader");
+
+const alertBox =
+document.getElementById("alert-box");
 
 let weatherChart;
 let map;
@@ -16,11 +24,7 @@ document.getElementById(
 "search-btn"
 ).addEventListener("click",()=>{
 
-if(cityInput.value.trim() !== ""){
-
-getWeather(cityInput.value);
-
-}
+searchWeather();
 
 });
 
@@ -32,12 +36,25 @@ cityInput.addEventListener(
 
 if(e.key === "Enter"){
 
-getWeather(cityInput.value);
+searchWeather();
 
 }
 
 }
 );
+
+function searchWeather(){
+
+const city =
+cityInput.value.trim();
+
+if(city !== ""){
+
+getWeather(city);
+
+}
+
+}
 
 /* Dark Mode */
 
@@ -48,6 +65,17 @@ document.getElementById(
 document.body.classList.toggle("dark");
 
 });
+
+/* Auto Dark Mode */
+
+const hour =
+new Date().getHours();
+
+if(hour >= 18 || hour <= 6){
+
+document.body.classList.add("dark");
+
+}
 
 /* My Location */
 
@@ -67,6 +95,12 @@ position.coords.longitude;
 
 getWeather(`${lat},${lon}`);
 
+},
+
+()=>{
+
+alert("Location access denied");
+
 }
 
 );
@@ -77,22 +111,23 @@ getWeather(`${lat},${lon}`);
 
 function getWeather(city){
 
-weather.style.display = "block";
+showLoader();
 
-weather.innerHTML =
-"<h2>Loading Weather...</h2>";
+weather.style.display = "none";
 
 fetch(
-`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`
+`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes&alerts=yes`
 )
 
 .then(response=>response.json())
 
 .then(data=>{
 
-console.log(data);
+hideLoader();
 
 if(data.error){
+
+weather.style.display = "block";
 
 weather.innerHTML = `
 
@@ -112,7 +147,11 @@ showWeather(data);
 
 .catch(error=>{
 
+hideLoader();
+
 console.log(error);
+
+weather.style.display = "block";
 
 weather.innerHTML = `
 
@@ -126,9 +165,25 @@ Failed to fetch weather
 
 }
 
+/* Loader */
+
+function showLoader(){
+
+loader.classList.remove("hidden");
+
+}
+
+function hideLoader(){
+
+loader.classList.add("hidden");
+
+}
+
 /* Show Weather */
 
 function showWeather(data){
+
+weather.style.display = "block";
 
 const current =
 data.current;
@@ -139,11 +194,24 @@ data.location;
 const forecast =
 data.forecast.forecastday;
 
-/* Dynamic Background */
+/* Alerts */
 
-changeBackground(
-current.condition.text
-);
+if(data.alerts.alert.length > 0){
+
+alertBox.classList.remove("hidden");
+
+alertBox.innerHTML =
+`⚠ ${data.alerts.alert[0].headline}`;
+
+}
+
+else{
+
+alertBox.classList.add("hidden");
+
+}
+
+/* Weather HTML */
 
 weather.innerHTML = `
 
@@ -172,13 +240,19 @@ ${current.condition.text}
 
 <div class="main-icon">
 
-<img src="https:${current.condition.icon}">
+<img
+src="https:${current.condition.icon}">
 
 </div>
 
 </div>
 
 <div class="grid">
+
+<div class="card">
+<h3>Feels Like</h3>
+<p>${current.feelslike_c}°C</p>
+</div>
 
 <div class="card">
 <h3>Humidity</h3>
@@ -201,6 +275,11 @@ ${current.condition.text}
 </div>
 
 <div class="card">
+<h3>Visibility</h3>
+<p>${current.vis_km} KM</p>
+</div>
+
+<div class="card">
 <h3>Sunrise</h3>
 <p>${forecast[0].astro.sunrise}</p>
 </div>
@@ -210,10 +289,15 @@ ${current.condition.text}
 <p>${forecast[0].astro.sunset}</p>
 </div>
 
+<div class="card">
+<h3>Air Quality</h3>
+<p>${Math.round(current.air_quality.pm2_5)}</p>
 </div>
 
-<h2 style="margin-top:35px;">
-24 Hour Forecast
+</div>
+
+<h2 class="section-title">
+⏰ Hourly Forecast
 </h2>
 
 <div
@@ -221,8 +305,8 @@ class="hourly-container"
 id="hourly-container">
 </div>
 
-<h2 style="margin-top:35px;">
-7 Day Forecast
+<h2 class="section-title">
+📅 7 Day Forecast
 </h2>
 
 <div class="forecast-container">
@@ -258,13 +342,18 @@ ${day.day.condition.text}
 
 </div>
 
+<h2 class="section-title">
+📈 Temperature Analytics
+</h2>
+
 <canvas id="tempChart"></canvas>
 
-<h2 style="margin-top:35px;">
-Live Weather Map
+<h2 class="section-title">
+🗺 Live Weather Map
 </h2>
 
 <div id="map"></div>
+
 `;
 
 showHourly(
@@ -293,8 +382,7 @@ document.getElementById(
 
 container.innerHTML = "";
 
-hourData.slice(0,24)
-.forEach(hour=>{
+hourData.forEach(hour=>{
 
 let time =
 hour.time.split(" ")[1];
@@ -315,8 +403,7 @@ ${hour.temp_c}°C
 </p>
 
 <p>
-Rain:
-${hour.chance_of_rain}%
+💧 ${hour.chance_of_rain}%
 </p>
 
 </div>
@@ -352,14 +439,26 @@ weatherChart.destroy();
 
 }
 
-weatherChart =
-new Chart(
-
+const ctx =
 document.getElementById(
 "tempChart"
-),
+).getContext("2d");
 
-{
+const gradient =
+ctx.createLinearGradient(0,0,0,400);
+
+gradient.addColorStop(
+0,
+"rgba(0,150,255,0.7)"
+);
+
+gradient.addColorStop(
+1,
+"rgba(0,150,255,0)"
+);
+
+weatherChart =
+new Chart(ctx,{
 
 type:'line',
 
@@ -377,7 +476,11 @@ borderWidth:4,
 
 tension:0.5,
 
-fill:true
+fill:true,
+
+backgroundColor:gradient,
+
+pointRadius:6
 
 }]
 
@@ -385,13 +488,43 @@ fill:true
 
 options:{
 
-responsive:true
+responsive:true,
+
+plugins:{
+
+legend:{
+
+labels:{
+color:"white"
+}
+
+}
+
+},
+
+scales:{
+
+x:{
+
+ticks:{
+color:"white"
+}
+
+},
+
+y:{
+
+ticks:{
+color:"white"
+}
+
+}
 
 }
 
 }
 
-);
+});
 
 }
 
@@ -407,7 +540,7 @@ map.remove();
 
 map =
 L.map('map')
-.setView([lat, lon], 8);
+.setView([lat, lon], 7);
 
 L.tileLayer(
 
@@ -423,46 +556,9 @@ L.marker([lat, lon])
 
 .addTo(map)
 
-.bindPopup("Weather Location")
+.bindPopup("📍 Weather Location")
 
 .openPopup();
-
-}
-
-/* Dynamic Background */
-
-function changeBackground(condition){
-
-condition =
-condition.toLowerCase();
-
-if(condition.includes("rain")){
-
-document.body.style.background =
-"linear-gradient(to right,#4b79a1,#283e51)";
-
-}
-
-else if(condition.includes("cloud")){
-
-document.body.style.background =
-"linear-gradient(to right,#757f9a,#d7dde8)";
-
-}
-
-else if(condition.includes("clear")){
-
-document.body.style.background =
-"linear-gradient(to right,#56ccf2,#2f80ed)";
-
-}
-
-else{
-
-document.body.style.background =
-"linear-gradient(to right,#1d4350,#a43931)";
-
-}
 
 }
 
