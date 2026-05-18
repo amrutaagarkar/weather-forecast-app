@@ -356,13 +356,22 @@ return "Good Evening 🌙";
 
 function checkWeatherWarnings(current){
 
+/* Extreme Heat */
+
 if(current.temp_c >= 40){
 
 showCustomAlert(
 "🔥 Extreme Heat Warning"
 );
 
+showDeviceNotification(
+"Weather Alert",
+"🔥 Extreme Heat Warning"
+);
+
 }
+
+/* High UV */
 
 if(current.uv >= 8){
 
@@ -370,7 +379,14 @@ showCustomAlert(
 "☀ Very High UV Index"
 );
 
+showDeviceNotification(
+"Weather Alert",
+"☀ Very High UV Index"
+);
+
 }
+
+/* Strong Wind */
 
 if(current.wind_kph >= 50){
 
@@ -378,30 +394,14 @@ showCustomAlert(
 "🌪 Strong Wind Alert"
 );
 
-}
+showDeviceNotification(
+"Weather Alert",
+"🌪 Strong Wind Expected"
+);
 
 }
 
-function showCustomAlert(message){
-
-const alert =
-document.createElement("div");
-
-alert.className =
-"custom-alert";
-
-alert.innerHTML = message;
-
-document.body.appendChild(alert);
-
-setTimeout(()=>{
-
-alert.remove();
-
-},4000);
-
 }
-
 /* =========================
    SHOW WEATHER
 ========================= */
@@ -996,7 +996,43 @@ getWeather(currentCity);
    AUTO LOAD
 ========================= */
 
+/* =========================
+   DEVICE NOTIFICATIONS
+========================= */
+
+function requestNotificationPermission(){
+
+if("Notification" in window){
+
+Notification.requestPermission();
+
+}
+
+}
+
+function showDeviceNotification(title,message){
+
+if(Notification.permission === "granted"){
+
+new Notification(title,{
+
+body:message,
+
+icon:"https://cdn-icons-png.flaticon.com/512/1779/1779940.png"
+
+});
+
+}
+
+}
+
+/* =========================
+   AUTO LOAD
+========================= */
+
 window.onload = ()=>{
+
+requestNotificationPermission();
 
 const savedCity =
 localStorage.getItem(
