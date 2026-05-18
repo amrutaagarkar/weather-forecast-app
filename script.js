@@ -67,12 +67,27 @@ getWeather(city);
 ========================= */
 document.getElementById(
 "dark-btn"
-).addEventListener("click",()=>{
+).addEventListener(
+"click",
+()=>{
 
 document.body.classList.toggle("dark");
 
-});
+/* Reapply weather theme */
 
+const condition =
+document.querySelector(".condition");
+
+if(condition){
+
+setWeatherTheme(
+condition.innerText
+);
+
+}
+
+}
+);
 
 
 /* Auto Dark Mode */
@@ -225,40 +240,64 @@ searchBtn.disabled = false;
 
 function setWeatherTheme(condition){
 
-const app =
-document.querySelector(".app");
+/* STOP if dark mode is active */
 
-condition =
-condition.toLowerCase();
+if(document.body.classList.contains("dark")){
+
+document.body.style.background =
+"linear-gradient(135deg,#000000,#121212,#1f1f1f)";
+
+return;
+
+}
+
+condition = condition.toLowerCase();
+
+/* Sunny */
 
 if(
 condition.includes("sunny") ||
 condition.includes("clear")
 ){
 
-app.style.background =
+document.body.style.background =
 "linear-gradient(135deg,#f6d365,#fda085)";
 
 }
 
+/* Rain */
+
 else if(condition.includes("rain")){
 
-app.style.background =
+document.body.style.background =
 "linear-gradient(135deg,#4b6cb7,#182848)";
 
 }
 
+/* Clouds */
+
 else if(condition.includes("cloud")){
 
-app.style.background =
+document.body.style.background =
 "linear-gradient(135deg,#bdc3c7,#2c3e50)";
 
 }
 
+/* Snow */
+
+else if(condition.includes("snow")){
+
+document.body.style.background =
+"linear-gradient(135deg,#e6dada,#274046)";
+
+}
+
+/* Default */
+
 else{
 
-app.style.background =
-"rgba(255,255,255,0.08)";
+document.body.style.background =
+"linear-gradient(135deg,#4facfe,#00f2fe)";
 
 }
 
