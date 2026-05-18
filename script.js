@@ -15,20 +15,24 @@ document.getElementById("loader");
 const alertBox =
 document.getElementById("alert-box");
 
+const searchBtn =
+document.getElementById("search-btn");
+
 let weatherChart;
 let map;
 
-/* Search */
+/* =========================
+   SEARCH
+========================= */
 
-document.getElementById(
-"search-btn"
-).addEventListener("click",()=>{
+searchBtn.addEventListener(
+"click",
+()=>{
 
 searchWeather();
 
-});
-
-/* Enter Key */
+}
+);
 
 cityInput.addEventListener(
 "keypress",
@@ -50,21 +54,28 @@ cityInput.value.trim();
 
 if(city !== ""){
 
+saveSearch(city);
+
 getWeather(city);
 
 }
 
 }
 
-/* Dark Mode */
+/* =========================
+   DARK MODE
+========================= */
 
 document.getElementById(
 "dark-btn"
-).addEventListener("click",()=>{
+).addEventListener(
+"click",
+()=>{
 
 document.body.classList.toggle("dark");
 
-});
+}
+);
 
 /* Auto Dark Mode */
 
@@ -77,11 +88,15 @@ document.body.classList.add("dark");
 
 }
 
-/* My Location */
+/* =========================
+   LOCATION
+========================= */
 
 document.getElementById(
 "location-btn"
-).addEventListener("click",()=>{
+).addEventListener(
+"click",
+()=>{
 
 navigator.geolocation.getCurrentPosition(
 
@@ -99,15 +114,24 @@ getWeather(`${lat},${lon}`);
 
 ()=>{
 
-alert("Location access denied");
+weather.innerHTML = `
+
+<h2 style="color:red;">
+📍 Location Access Denied
+</h2>
+
+`;
 
 }
 
 );
 
-});
+}
+);
 
-/* Get Weather */
+/* =========================
+   GET WEATHER
+========================= */
 
 function getWeather(city){
 
@@ -155,9 +179,21 @@ weather.style.display = "block";
 
 weather.innerHTML = `
 
-<h2 style="color:red;">
-Failed to fetch weather
+<div class="error-box">
+
+<h2>
+⚠ Network Error
 </h2>
+
+<p>
+Please check your internet connection
+</p>
+
+<button onclick="searchWeather()">
+Retry
+</button>
+
+</div>
 
 `;
 
@@ -165,11 +201,15 @@ Failed to fetch weather
 
 }
 
-/* Loader */
+/* =========================
+   LOADER
+========================= */
 
 function showLoader(){
 
 loader.classList.remove("hidden");
+
+searchBtn.disabled = true;
 
 }
 
@@ -177,9 +217,160 @@ function hideLoader(){
 
 loader.classList.add("hidden");
 
+searchBtn.disabled = false;
+
 }
 
-/* Show Weather */
+/* =========================
+   WEATHER THEME
+========================= */
+
+function setWeatherTheme(condition){
+
+condition = condition.toLowerCase();
+
+if(
+condition.includes("sunny") ||
+condition.includes("clear")
+){
+
+document.body.style.background =
+"linear-gradient(135deg,#f6d365,#fda085)";
+
+}
+
+else if(condition.includes("rain")){
+
+document.body.style.background =
+"linear-gradient(135deg,#4b6cb7,#182848)";
+
+}
+
+else if(condition.includes("cloud")){
+
+document.body.style.background =
+"linear-gradient(135deg,#bdc3c7,#2c3e50)";
+
+}
+
+else if(condition.includes("snow")){
+
+document.body.style.background =
+"linear-gradient(135deg,#e6dada,#274046)";
+
+}
+
+else{
+
+document.body.style.background =
+"linear-gradient(135deg,#4facfe,#00f2fe)";
+
+}
+
+}
+
+/* =========================
+   AQI STATUS
+========================= */
+
+function getAQIStatus(pm){
+
+if(pm <= 12){
+return "Good";
+}
+
+if(pm <= 35){
+return "Moderate";
+}
+
+if(pm <= 55){
+return "Unhealthy";
+}
+
+return "Hazardous";
+
+}
+
+/* =========================
+   GREETING
+========================= */
+
+function getGreeting(){
+
+const hour =
+new Date().getHours();
+
+if(hour < 12){
+
+return "Good Morning ☀";
+
+}
+
+if(hour < 18){
+
+return "Good Afternoon 🌤";
+
+}
+
+return "Good Evening 🌙";
+
+}
+
+/* =========================
+   WEATHER WARNINGS
+========================= */
+
+function checkWeatherWarnings(current){
+
+if(current.temp_c >= 40){
+
+showCustomAlert(
+"🔥 Extreme Heat Warning"
+);
+
+}
+
+if(current.uv >= 8){
+
+showCustomAlert(
+"☀ Very High UV Index"
+);
+
+}
+
+if(current.wind_kph >= 50){
+
+showCustomAlert(
+"🌪 Strong Wind Alert"
+);
+
+}
+
+}
+
+function showCustomAlert(message){
+
+const alert =
+document.createElement("div");
+
+alert.className =
+"custom-alert";
+
+alert.innerHTML = message;
+
+document.body.appendChild(alert);
+
+setTimeout(()=>{
+
+alert.remove();
+
+},4000);
+
+}
+
+/* =========================
+   SHOW WEATHER
+========================= */
 
 function showWeather(data){
 
@@ -194,9 +385,26 @@ data.location;
 const forecast =
 data.forecast.forecastday;
 
+/* Theme */
+
+setWeatherTheme(
+current.condition.text
+);
+
+/* Save Last City */
+
+localStorage.setItem(
+"lastCity",
+location.name
+);
+
 /* Alerts */
 
-if(data.alerts.alert.length > 0){
+if(
+data.alerts &&
+data.alerts.alert &&
+data.alerts.alert.length > 0
+){
 
 alertBox.classList.remove("hidden");
 
@@ -211,6 +419,10 @@ alertBox.classList.add("hidden");
 
 }
 
+/* Weather Warnings */
+
+checkWeatherWarnings(current);
+
 /* Weather HTML */
 
 weather.innerHTML = `
@@ -220,6 +432,10 @@ weather.innerHTML = `
 <div>
 
 <h2>
+${getGreeting()}
+</h2>
+
+<h2>
 ${location.name},
 ${location.country}
 </h2>
@@ -227,6 +443,8 @@ ${location.country}
 <p>
 ${location.localtime}
 </p>
+
+<div id="live-clock"></div>
 
 <div class="temp">
 ${current.temp_c}°C
@@ -265,6 +483,11 @@ src="https:${current.condition.icon}">
 </div>
 
 <div class="card">
+<h3>Wind Direction</h3>
+<p>${current.wind_dir}</p>
+</div>
+
+<div class="card">
 <h3>Pressure</h3>
 <p>${current.pressure_mb} mb</p>
 </div>
@@ -291,7 +514,13 @@ src="https:${current.condition.icon}">
 
 <div class="card">
 <h3>Air Quality</h3>
-<p>${Math.round(current.air_quality.pm2_5)}</p>
+<p>
+${Math.round(current.air_quality.pm2_5)}
+-
+${getAQIStatus(
+current.air_quality.pm2_5
+)}
+</p>
 </div>
 
 </div>
@@ -311,9 +540,12 @@ id="hourly-container">
 
 <div class="forecast-container">
 
-${forecast.map(day=>`
+${forecast.map((day,index)=>`
 
-<div class="forecast-card">
+<div
+class="forecast-card"
+data-index="${index}"
+>
 
 <h3>
 
@@ -356,6 +588,8 @@ ${day.day.condition.text}
 
 `;
 
+/* Functions */
+
 showHourly(
 forecast[0].hour
 );
@@ -369,9 +603,58 @@ location.lat,
 location.lon
 );
 
+/* Forecast Details */
+
+document
+.querySelectorAll(".forecast-card")
+.forEach((card,index)=>{
+
+card.addEventListener(
+"click",
+()=>{
+
+const day =
+forecast[index];
+
+alert(`
+
+Date: ${day.date}
+
+Condition:
+${day.day.condition.text}
+
+Humidity:
+${day.day.avghumidity}%
+
+Rain Chance:
+${day.day.daily_chance_of_rain}%
+
+Max Temp:
+${day.day.maxtemp_c}°C
+
+Min Temp:
+${day.day.mintemp_c}°C
+
+`);
+
+}
+);
+
+});
+
+/* Smooth Scroll */
+
+weather.scrollIntoView({
+
+behavior:"smooth"
+
+});
+
 }
 
-/* Hourly Forecast */
+/* =========================
+   HOURLY FORECAST
+========================= */
 
 function showHourly(hourData){
 
@@ -382,7 +665,9 @@ document.getElementById(
 
 container.innerHTML = "";
 
-hourData.forEach(hour=>{
+hourData
+.slice(0,12)
+.forEach(hour=>{
 
 let time =
 hour.time.split(" ")[1];
@@ -407,13 +692,44 @@ ${hour.temp_c}°C
 </p>
 
 </div>
+
 `;
 
 });
 
 }
 
-/* Chart */
+/* =========================
+   TEMP COLOR
+========================= */
+
+function getTempColor(temp){
+
+if(temp <= 10){
+
+return "#00b4db";
+
+}
+
+if(temp <= 25){
+
+return "#00c853";
+
+}
+
+if(temp <= 35){
+
+return "#ff9800";
+
+}
+
+return "#ff1744";
+
+}
+
+/* =========================
+   CHART
+========================= */
 
 function createChart(forecast){
 
@@ -457,6 +773,16 @@ gradient.addColorStop(
 "rgba(0,150,255,0)"
 );
 
+const lineColor =
+getTempColor(
+Math.max(...temps)
+);
+
+const textColor =
+document.body.classList.contains("dark")
+? "white"
+: "black";
+
 weatherChart =
 new Chart(ctx,{
 
@@ -471,6 +797,8 @@ datasets:[{
 label:'Temperature °C',
 
 data:temps,
+
+borderColor:lineColor,
 
 borderWidth:4,
 
@@ -495,7 +823,7 @@ plugins:{
 legend:{
 
 labels:{
-color:"white"
+color:textColor
 }
 
 }
@@ -507,7 +835,7 @@ scales:{
 x:{
 
 ticks:{
-color:"white"
+color:textColor
 }
 
 },
@@ -515,7 +843,7 @@ color:"white"
 y:{
 
 ticks:{
-color:"white"
+color:textColor
 }
 
 }
@@ -528,7 +856,9 @@ color:"white"
 
 }
 
-/* Map */
+/* =========================
+   MAP
+========================= */
 
 function loadMap(lat,lon){
 
@@ -540,7 +870,7 @@ map.remove();
 
 map =
 L.map('map')
-.setView([lat, lon], 7);
+.setView([lat, lon], 10);
 
 L.tileLayer(
 
@@ -562,11 +892,93 @@ L.marker([lat, lon])
 
 }
 
-/* Auto Load */
+/* =========================
+   SEARCH HISTORY
+========================= */
+
+function saveSearch(city){
+
+let history =
+JSON.parse(
+localStorage.getItem("history")
+) || [];
+
+if(!history.includes(city)){
+
+history.unshift(city);
+
+}
+
+history = history.slice(0,5);
+
+localStorage.setItem(
+"history",
+JSON.stringify(history)
+);
+
+}
+
+/* =========================
+   LIVE CLOCK
+========================= */
+
+setInterval(()=>{
+
+const clock =
+document.getElementById(
+"live-clock"
+);
+
+if(clock){
+
+clock.innerHTML =
+new Date()
+.toLocaleTimeString();
+
+}
+
+},1000);
+
+/* =========================
+   AUTO REFRESH
+========================= */
+
+setInterval(()=>{
+
+const currentCity =
+localStorage.getItem(
+"lastCity"
+);
+
+if(currentCity){
+
+getWeather(currentCity);
+
+}
+
+},300000);
+
+/* =========================
+   AUTO LOAD
+========================= */
 
 window.onload = ()=>{
 
-navigator.geolocation.getCurrentPosition(
+const savedCity =
+localStorage.getItem(
+"lastCity"
+);
+
+if(savedCity){
+
+getWeather(savedCity);
+
+}
+
+else{
+
+navigator.geolocation
+.getCurrentPosition(
 
 (position)=>{
 
@@ -581,5 +993,7 @@ getWeather(`${lat},${lon}`);
 }
 
 );
+
+}
 
 };
