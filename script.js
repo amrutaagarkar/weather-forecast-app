@@ -65,17 +65,15 @@ getWeather(city);
 /* =========================
    DARK MODE
 ========================= */
-
 document.getElementById(
 "dark-btn"
-).addEventListener(
-"click",
-()=>{
+).addEventListener("click",()=>{
 
 document.body.classList.toggle("dark");
 
-}
-);
+});
+
+
 
 /* Auto Dark Mode */
 
