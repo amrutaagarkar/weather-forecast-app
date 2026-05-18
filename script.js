@@ -1,7 +1,9 @@
 const apiKey =
 "903dbc34862b4c14b0d170728261705";
 
-/* Elements */
+/* =========================
+   ELEMENTS
+========================= */
 
 const cityInput =
 document.getElementById("city");
@@ -17,6 +19,9 @@ document.getElementById("alert-box");
 
 const searchBtn =
 document.getElementById("search-btn");
+
+const darkBtn =
+document.getElementById("dark-btn");
 
 let weatherChart;
 let map;
@@ -54,8 +59,6 @@ cityInput.value.trim();
 
 if(city !== ""){
 
-saveSearch(city);
-
 getWeather(city);
 
 }
@@ -63,43 +66,69 @@ getWeather(city);
 }
 
 /* =========================
-   DARK MODE
+   DARK MODE FIX
 ========================= */
-document.getElementById(
-"dark-btn"
-).addEventListener(
+
+darkBtn.addEventListener(
 "click",
 ()=>{
 
 document.body.classList.toggle("dark");
 
-/* Reapply weather theme */
+/* Save Theme */
 
-const condition =
-document.querySelector(".condition");
+if(
+document.body.classList.contains(
+"dark"
+)
+){
 
-if(condition){
-
-setWeatherTheme(
-condition.innerText
+localStorage.setItem(
+"theme",
+"dark"
 );
 
+darkBtn.innerHTML =
+"☀ Light Mode";
+
+}
+else{
+
+localStorage.setItem(
+"theme",
+"light"
+);
+
+darkBtn.innerHTML =
+"🌙 Dark Mode";
+
 }
 
 }
 );
 
+/* Load Saved Theme */
 
-/* Auto Dark Mode */
+window.addEventListener(
+"load",
+()=>{
 
-const hour =
-new Date().getHours();
+const savedTheme =
+localStorage.getItem("theme");
 
-if(hour >= 18 || hour <= 6){
+if(savedTheme === "dark"){
 
-document.body.classList.add("dark");
+document.body.classList.add(
+"dark"
+);
+
+darkBtn.innerHTML =
+"☀ Light Mode";
 
 }
+
+}
+);
 
 /* =========================
    LOCATION
@@ -111,7 +140,8 @@ document.getElementById(
 "click",
 ()=>{
 
-navigator.geolocation.getCurrentPosition(
+navigator.geolocation
+.getCurrentPosition(
 
 (position)=>{
 
@@ -146,31 +176,21 @@ weather.innerHTML = `
    GET WEATHER
 ========================= */
 
-async function getWeather(city){
-
-try{
+function getWeather(city){
 
 showLoader();
 
 weather.style.display = "none";
 
-const response = await fetch(
+fetch(
 `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes&alerts=yes`
-);
+)
 
-/* Check API response */
+.then(response=>response.json())
 
-if(!response.ok){
-
-throw new Error("Failed to fetch");
-
-}
-
-const data = await response.json();
+.then(data=>{
 
 hideLoader();
-
-/* API Error */
 
 if(data.error){
 
@@ -178,13 +198,9 @@ weather.style.display = "block";
 
 weather.innerHTML = `
 
-<div class="error-box">
-
-<h2>
-⚠ ${data.error.message}
+<h2 style="color:red;">
+${data.error.message}
 </h2>
-
-</div>
 
 `;
 
@@ -192,32 +208,11 @@ return;
 
 }
 
-/* Save last searched city */
-
-localStorage.setItem(
-"lastCity",
-city
-);
-
-/* Show Weather */
-
 showWeather(data);
 
-/* Weather Theme */
+})
 
-setWeatherTheme(
-data.current.condition.text
-);
-
-/* Weather Alerts */
-
-checkWeatherWarnings(
-data.current
-);
-
-}
-
-catch(error){
+.catch(error=>{
 
 hideLoader();
 
@@ -227,25 +222,13 @@ weather.style.display = "block";
 
 weather.innerHTML = `
 
-<div class="error-box">
-
-<h2>
-⚠ Network Error
+<h2 style="color:red;">
+⚠ Failed to fetch weather
 </h2>
-
-<p>
-Please check your internet connection
-</p>
-
-<button onclick="searchWeather()">
-Retry
-</button>
-
-</div>
 
 `;
 
-}
+});
 
 }
 
@@ -255,7 +238,9 @@ Retry
 
 function showLoader(){
 
-loader.classList.remove("hidden");
+loader.classList.remove(
+"hidden"
+);
 
 searchBtn.disabled = true;
 
@@ -263,7 +248,9 @@ searchBtn.disabled = true;
 
 function hideLoader(){
 
-loader.classList.add("hidden");
+loader.classList.add(
+"hidden"
+);
 
 searchBtn.disabled = false;
 
@@ -275,88 +262,46 @@ searchBtn.disabled = false;
 
 function setWeatherTheme(condition){
 
-/* STOP if dark mode is active */
+const app =
+document.querySelector(".app");
 
-if(document.body.classList.contains("dark")){
-
-document.body.style.background =
-"linear-gradient(135deg,#000000,#121212,#1f1f1f)";
-
-return;
-
-}
-
-condition = condition.toLowerCase();
-
-/* Sunny */
+condition =
+condition.toLowerCase();
 
 if(
 condition.includes("sunny") ||
 condition.includes("clear")
 ){
 
-document.body.style.background =
+app.style.background =
 "linear-gradient(135deg,#f6d365,#fda085)";
 
 }
 
-/* Rain */
+else if(
+condition.includes("rain")
+){
 
-else if(condition.includes("rain")){
-
-document.body.style.background =
+app.style.background =
 "linear-gradient(135deg,#4b6cb7,#182848)";
 
 }
 
-/* Clouds */
+else if(
+condition.includes("cloud")
+){
 
-else if(condition.includes("cloud")){
-
-document.body.style.background =
+app.style.background =
 "linear-gradient(135deg,#bdc3c7,#2c3e50)";
 
 }
 
-/* Snow */
-
-else if(condition.includes("snow")){
-
-document.body.style.background =
-"linear-gradient(135deg,#e6dada,#274046)";
-
-}
-
-/* Default */
-
 else{
 
-document.body.style.background =
-"linear-gradient(135deg,#4facfe,#00f2fe)";
+app.style.background =
+"rgba(255,255,255,0.08)";
 
 }
-
-}
-
-/* =========================
-   AQI STATUS
-========================= */
-
-function getAQIStatus(pm){
-
-if(pm <= 12){
-return "Good";
-}
-
-if(pm <= 35){
-return "Moderate";
-}
-
-if(pm <= 55){
-return "Unhealthy";
-}
-
-return "Hazardous";
 
 }
 
@@ -386,64 +331,13 @@ return "Good Evening 🌙";
 }
 
 /* =========================
-   WEATHER WARNINGS
-========================= */
-
-function checkWeatherWarnings(current){
-
-/* Extreme Heat */
-
-if(current.temp_c >= 40){
-
-showCustomAlert(
-"🔥 Extreme Heat Warning"
-);
-
-showDeviceNotification(
-"Weather Alert",
-"🔥 Extreme Heat Warning"
-);
-
-}
-
-/* High UV */
-
-if(current.uv >= 8){
-
-showCustomAlert(
-"☀ Very High UV Index"
-);
-
-showDeviceNotification(
-"Weather Alert",
-"☀ Very High UV Index"
-);
-
-}
-
-/* Strong Wind */
-
-if(current.wind_kph >= 50){
-
-showCustomAlert(
-"🌪 Strong Wind Alert"
-);
-
-showDeviceNotification(
-"Weather Alert",
-"🌪 Strong Wind Expected"
-);
-
-}
-
-}
-/* =========================
    SHOW WEATHER
 ========================= */
 
 function showWeather(data){
 
-weather.style.display = "block";
+weather.style.display =
+"block";
 
 const current =
 data.current;
@@ -460,13 +354,6 @@ setWeatherTheme(
 current.condition.text
 );
 
-/* Save Last City */
-
-localStorage.setItem(
-"lastCity",
-location.name
-);
-
 /* Alerts */
 
 if(
@@ -475,71 +362,25 @@ data.alerts.alert &&
 data.alerts.alert.length > 0
 ){
 
-alertBox.classList.remove("hidden");
+alertBox.classList.remove(
+"hidden"
+);
 
 alertBox.innerHTML =
 `⚠ ${data.alerts.alert[0].headline}`;
 
 }
-
 else{
 
-alertBox.classList.add("hidden");
-
-}
-
-/* Weather Warnings */
-
-function checkWeatherWarnings(current){
-
-/* Extreme Heat */
-
-if(current.temp_c >= 40){
-
-showCustomAlert(
-"🔥 Extreme Heat Warning"
-);
-
-showDeviceNotification(
-"Weather Alert",
-"🔥 Extreme Heat Warning"
+alertBox.classList.add(
+"hidden"
 );
 
 }
 
-/* High UV */
-
-if(current.uv >= 8){
-
-showCustomAlert(
-"☀ Very High UV Index"
-);
-
-showDeviceNotification(
-"Weather Alert",
-"☀ Very High UV Index"
-);
-
-}
-
-/* Strong Wind */
-
-if(current.wind_kph >= 50){
-
-showCustomAlert(
-"🌪 Strong Wind Alert"
-);
-
-showDeviceNotification(
-"Weather Alert",
-"🌪 Strong Wind Expected"
-);
-
-}
-
-}
-
-/* Weather HTML */
+/* =========================
+   WEATHER HTML
+========================= */
 
 weather.innerHTML = `
 
@@ -599,11 +440,6 @@ src="https:${current.condition.icon}">
 </div>
 
 <div class="card">
-<h3>Wind Direction</h3>
-<p>${current.wind_dir}</p>
-</div>
-
-<div class="card">
 <h3>Pressure</h3>
 <p>${current.pressure_mb} mb</p>
 </div>
@@ -628,17 +464,6 @@ src="https:${current.condition.icon}">
 <p>${forecast[0].astro.sunset}</p>
 </div>
 
-<div class="card">
-<h3>Air Quality</h3>
-<p>
-${Math.round(current.air_quality.pm2_5)}
--
-${getAQIStatus(
-current.air_quality.pm2_5
-)}
-</p>
-</div>
-
 </div>
 
 <h2 class="section-title">
@@ -656,12 +481,9 @@ id="hourly-container">
 
 <div class="forecast-container">
 
-${forecast.map((day,index)=>`
+${forecast.map(day=>`
 
-<div
-class="forecast-card"
-data-index="${index}"
->
+<div class="forecast-card">
 
 <h3>
 
@@ -704,8 +526,6 @@ ${day.day.condition.text}
 
 `;
 
-/* Functions */
-
 showHourly(
 forecast[0].hour
 );
@@ -718,53 +538,6 @@ loadMap(
 location.lat,
 location.lon
 );
-
-/* Forecast Details */
-
-document
-.querySelectorAll(".forecast-card")
-.forEach((card,index)=>{
-
-card.addEventListener(
-"click",
-()=>{
-
-const day =
-forecast[index];
-
-alert(`
-
-Date: ${day.date}
-
-Condition:
-${day.day.condition.text}
-
-Humidity:
-${day.day.avghumidity}%
-
-Rain Chance:
-${day.day.daily_chance_of_rain}%
-
-Max Temp:
-${day.day.maxtemp_c}°C
-
-Min Temp:
-${day.day.mintemp_c}°C
-
-`);
-
-}
-);
-
-});
-
-/* Smooth Scroll */
-
-weather.scrollIntoView({
-
-behavior:"smooth"
-
-});
 
 }
 
@@ -816,34 +589,6 @@ ${hour.temp_c}°C
 }
 
 /* =========================
-   TEMP COLOR
-========================= */
-
-function getTempColor(temp){
-
-if(temp <= 10){
-
-return "#00b4db";
-
-}
-
-if(temp <= 25){
-
-return "#00c853";
-
-}
-
-if(temp <= 35){
-
-return "#ff9800";
-
-}
-
-return "#ff1744";
-
-}
-
-/* =========================
    CHART
 ========================= */
 
@@ -876,28 +621,12 @@ document.getElementById(
 "tempChart"
 ).getContext("2d");
 
-const gradient =
-ctx.createLinearGradient(0,0,0,400);
-
-gradient.addColorStop(
-0,
-"rgba(0,150,255,0.7)"
-);
-
-gradient.addColorStop(
-1,
-"rgba(0,150,255,0)"
-);
-
-const lineColor =
-getTempColor(
-Math.max(...temps)
-);
-
 const textColor =
-document.body.classList.contains("dark")
+document.body.classList.contains(
+"dark"
+)
 ? "white"
-: "black";
+: "#222";
 
 weatherChart =
 new Chart(ctx,{
@@ -914,17 +643,18 @@ label:'Temperature °C',
 
 data:temps,
 
-borderColor:lineColor,
-
 borderWidth:4,
 
 tension:0.5,
 
 fill:true,
 
-backgroundColor:gradient,
+pointRadius:6,
 
-pointRadius:6
+borderColor:"#00c6ff",
+
+backgroundColor:
+"rgba(0,198,255,0.2)"
 
 }]
 
@@ -1002,35 +732,11 @@ L.marker([lat, lon])
 
 .addTo(map)
 
-.bindPopup("📍 Weather Location")
+.bindPopup(
+"📍 Weather Location"
+)
 
 .openPopup();
-
-}
-
-/* =========================
-   SEARCH HISTORY
-========================= */
-
-function saveSearch(city){
-
-let history =
-JSON.parse(
-localStorage.getItem("history")
-) || [];
-
-if(!history.includes(city)){
-
-history.unshift(city);
-
-}
-
-history = history.slice(0,5);
-
-localStorage.setItem(
-"history",
-JSON.stringify(history)
-);
 
 }
 
@@ -1056,105 +762,10 @@ new Date()
 },1000);
 
 /* =========================
-   AUTO REFRESH
-========================= */
-
-setInterval(()=>{
-
-const currentCity =
-localStorage.getItem(
-"lastCity"
-);
-
-if(currentCity){
-
-getWeather(currentCity);
-
-}
-
-},300000);
-
-/* =========================
    AUTO LOAD
 ========================= */
 
-/* =========================
-   DEVICE NOTIFICATIONS
-========================= */
-
-function requestNotificationPermission(){
-
-if("Notification" in window){
-
-Notification.requestPermission();
-
-}
-
-}
-
-function showDeviceNotification(title,message){
-
-if(Notification.permission === "granted"){
-
-new Notification(title,{
-
-body:message,
-
-icon:"https://cdn-icons-png.flaticon.com/512/1779/1779940.png"
-
-});
-
-}
-
-}
-
-/* =========================
-   AUTO LOAD
-========================= */
-/* =========================
-   DEVICE NOTIFICATIONS
-========================= */
-
-function requestNotificationPermission(){
-
-if("Notification" in window){
-
-Notification.requestPermission();
-
-}
-
-}
-
-function showDeviceNotification(title,message){
-
-if(Notification.permission === "granted"){
-
-new Notification(title,{
-
-body:message,
-icon:"https://cdn-icons-png.flaticon.com/512/1779/1779940.png"
-
-});
-
-}
-
-}
 window.onload = ()=>{
-
-requestNotificationPermission();
-
-const savedCity =
-localStorage.getItem(
-"lastCity"
-);
-
-if(savedCity){
-
-getWeather(savedCity);
-
-}
-
-else{
 
 navigator.geolocation
 .getCurrentPosition(
@@ -1172,7 +783,5 @@ getWeather(`${lat},${lon}`);
 }
 
 );
-
-}
 
 };
