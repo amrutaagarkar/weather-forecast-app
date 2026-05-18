@@ -29,6 +29,10 @@ rel="stylesheet">
 rel="stylesheet"
 href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
+<!-- Icons -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
 </head>
 
 <body>
@@ -38,8 +42,10 @@ href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <div class="app">
 
 <h1 class="title">
-Ultimate Weather App
+☁ Ultimate Weather App
 </h1>
+
+<!-- SEARCH -->
 
 <div class="search-box">
 
@@ -49,18 +55,35 @@ id="city"
 placeholder="Enter city name">
 
 <button id="search-btn">
-Search
+<i class="fa-solid fa-magnifying-glass"></i>
 </button>
 
 <button id="location-btn">
-My Location
+📍 My Location
 </button>
 
 <button id="dark-btn">
-Dark Mode
+🌙 Dark Mode
 </button>
 
 </div>
+
+<!-- Loader -->
+
+<div id="loader"
+class="loader hidden">
+
+<div class="spinner"></div>
+
+</div>
+
+<!-- Alerts -->
+
+<div id="alert-box"
+class="alert-box hidden">
+</div>
+
+<!-- Weather -->
 
 <div
 class="weather"
@@ -81,5 +104,4 @@ id="weather">
 <script src="script.js"></script>
 
 </body>
-
 </html>
