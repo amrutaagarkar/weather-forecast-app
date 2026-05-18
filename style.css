@@ -51,7 +51,35 @@ linear-gradient(
 #000000,
 #121212,
 #1f1f1f
-);
+) !important;
+
+color:white;
+
+}
+
+body.dark .app{
+
+background:
+rgba(255,255,255,0.05);
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+}
+
+body.dark .card,
+body.dark .forecast-card,
+body.dark .hour-card{
+
+background:
+rgba(255,255,255,0.05);
+
+}
+
+body.dark input{
+
+background:
+rgba(255,255,255,0.08);
 
 color:white;
 
@@ -115,13 +143,46 @@ line-height:1.1;
    SEARCH BOX
 ========================= */
 
-.search-box{
+.search-box input{
 
-display:flex;
-flex-direction:column;
-gap:18px;
+width:100%;
 
-margin-bottom:25px;
+padding:18px 20px;
+
+border:none;
+outline:none;
+
+border-radius:18px;
+
+background:
+rgba(255,255,255,0.25);
+
+color:#ffffff;
+
+font-size:1rem;
+font-weight:500;
+
+transition:0.3s;
+
+}
+
+/* Placeholder */
+
+.search-box input::placeholder{
+
+color:rgba(255,255,255,0.8);
+
+}
+
+/* Focus */
+
+.search-box input:focus{
+
+background:
+rgba(255,255,255,0.35);
+
+box-shadow:
+0 0 15px rgba(255,255,255,0.3);
 
 }
 
