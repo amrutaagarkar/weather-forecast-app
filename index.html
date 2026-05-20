@@ -8,92 +8,18 @@
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0">
 
-<title> 🌦️ Weather App</title>
+<title>🌦️Weather App</title>
 
 <!-- CSS -->
 <link rel="stylesheet" href="style.css">
 
-<!-- Google Font -->
-<link rel="preconnect"
-href="https://fonts.googleapis.com">
-
-<link rel="preconnect"
-href="https://fonts.gstatic.com"
-crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-rel="stylesheet">
-
-<!-- Leaflet CSS -->
-<link
-rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<!-- Icons -->
+<!-- Font Awesome -->
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="app">
-
-<h1 class="title">
-☁ Weather App
-</h1>
-
-<!-- SEARCH -->
-
-<div class="search-box">
-
-<input
-type="text"
-id="city"
-placeholder="Search city weather..."
->
-
-<button id="search-btn">
-Search
-</button>
-
-<button id="location-btn">
-My Location
-</button>
-
-<button id="dark-btn">
-Dark Mode
-</button>
-
-</div>
-
-<!-- Loader -->
-
-<div id="loader"
-class="loader hidden">
-
-<div class="spinner"></div>
-
-</div>
-
-<!-- Alerts -->
-
-<div id="alert-box"
-class="alert-box hidden">
-</div>
-
-<!-- Weather -->
-
-<div
-class="weather"
-id="weather">
-</div>
-
-</div>
-
-</div>
+<!-- Leaflet -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <!-- Chart JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -101,8 +27,364 @@ id="weather">
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- JavaScript -->
+</head>
+
+<body>
+
+<!-- CLOUDS -->
+
+<div class="cloud cloud1"></div>
+<div class="cloud cloud2"></div>
+
+<!-- FOG -->
+
+<div id="fog"></div>
+
+<!-- RAINBOW -->
+
+<div id="rainbow"></div>
+
+<!-- SUN -->
+
+<div id="sun"></div>
+
+<!-- STARS -->
+
+<div id="stars"></div>
+
+<!-- FLOATING WIDGET -->
+
+<div id="floating-widget">
+
+🌡️
+<span id="widget-temp">
+--°
+</span>
+
+</div>
+
+<!-- MAIN CONTAINER -->
+
+<div class="container">
+
+<div class="app">
+
+<!-- TITLE -->
+
+<h1 class="title">🌦️Weather App</h1>
+
+<!-- SEARCH BOX -->
+
+<div class="search-box">
+
+<!-- AI WEATHER ASSISTANT -->
+
+<div class="ai-box">
+
+<input
+type="text"
+id="ai-question"
+placeholder="Ask AI about weather...">
+
+<button id="ask-ai">
+
+🤖 Ask AI
+
+</button>
+
+<div id="ai-answer"></div>
+
+</div>
+
+<!-- CITY INPUT -->
+
+<input
+type="text"
+id="city"
+placeholder="Enter city name">
+
+<!-- SEARCH BUTTON -->
+
+<button id="search-btn">
+
+<i class="fa-solid fa-magnifying-glass"></i>
+
+Search
+
+</button>
+
+<!-- LOCATION BUTTON -->
+
+<button id="location-btn">
+
+📍 My Location
+
+</button>
+
+<!-- DARK MODE -->
+
+<button id="dark-btn">
+
+🌙 Dark Mode
+
+</button>
+
+<!-- SHARE -->
+
+<div id="share-link">
+
+🔗 Share Weather
+
+</div>
+
+</div>
+
+<!-- LOADER -->
+
+<div id="loader"
+class="hidden">
+
+<div class="spinner"></div>
+
+</div>
+
+<!-- ALERT BOX -->
+
+<div id="alert-box"
+class="alert-box hidden">
+
+</div>
+
+<!-- WEB ALERTS -->
+
+<div id="alert-container"></div>
+
+<!-- WEATHER DATA -->
+
+<div id="weather"></div>
+
+</div>
+
+</div>
+
+<!-- WEATHER TEMPLATE -->
+
+<script type="text/template"
+id="weather-template">
+
+<div class="top">
+
+<div>
+
+<h2 id="greeting">
+
+Good Morning ☀
+
+</h2>
+
+<h2 id="location-name">
+
+City
+
+</h2>
+
+<p id="location-time">
+
+Time
+
+</p>
+
+<div id="live-clock">
+
+00:00:00
+
+</div>
+
+<div class="temp"
+id="temperature">
+
+30°C
+
+</div>
+
+<div class="condition"
+id="condition-text">
+
+Sunny
+
+</div>
+
+</div>
+
+<div class="main-icon">
+
+<img
+id="weather-icon"
+src="">
+
+</div>
+
+</div>
+
+<!-- GRID -->
+
+<div class="grid">
+
+<div class="card">
+
+<h3>Humidity</h3>
+
+<p id="humidity"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Wind</h3>
+
+<p id="wind"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Feels Like</h3>
+
+<p id="feels-like"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Visibility</h3>
+
+<p id="visibility"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Moon Phase</h3>
+
+<p id="moon-phase"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Pressure</h3>
+
+<p id="pressure"></p>
+
+</div>
+
+<div class="card">
+
+<h3>UV Index</h3>
+
+<div class="uv-bar">
+
+<div class="uv-fill"
+id="uv-fill"></div>
+
+</div>
+
+<p id="uv"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Air Quality</h3>
+
+<p id="aqi"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Compass</h3>
+
+<div class="compass">
+
+🧭
+
+</div>
+
+<p id="wind-direction"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Sunrise</h3>
+
+<p id="sunrise"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Sunset</h3>
+
+<p id="sunset"></p>
+
+</div>
+
+</div>
+
+<!-- HOURLY -->
+
+<h2 class="section-title">
+
+⏰ Hourly Temperature
+
+</h2>
+
+<div class="hourly-container"
+id="hourly-container">
+
+</div>
+
+<!-- FORECAST -->
+
+<h2 class="section-title">
+
+📅 Weather Calendar
+
+</h2>
+
+<div class="calendar"
+id="calendar">
+
+</div>
+
+<!-- CHART -->
+
+<h2 class="section-title">
+
+📈 Temperature Analysis
+
+</h2>
+
+<canvas id="tempChart"></canvas>
+
+<!-- MAP -->
+
+<h2 class="section-title">
+
+🗺️ Live Weather Map
+
+</h2>
+
+<div id="map"></div>
+
+</script>
+
+<!-- JAVASCRIPT -->
+
 <script src="script.js"></script>
 
 </body>
+
 </html>
